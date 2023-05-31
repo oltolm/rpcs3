@@ -1,0 +1,5 @@
+---
+Checks: performance-*,-performance-no-int-to-ptr,-performance-inefficient-string-concatenation,-clang-analyzer-*,-clang-diagnostic-unused-const-variable,-clang-diagnostic-unused-parameter,-clang-diagnostic-unused-variable
+CheckOptions:
+    performance-unnecessary-value-param.AllowedTypes: 'std::function;std::shared_ptr;callback_t;x86::Mem'
+...

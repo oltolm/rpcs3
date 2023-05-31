@@ -1,0 +1,12 @@
+Diagnostics:
+  UnusedIncludes: None
+  ClangTidy:
+    Add:
+      - performance-*
+      - readability-make-member-function-const
+      - readability-non-const-parameter
+    Remove:
+      - performance-no-int-to-ptr
+      - performance-inefficient-string-concatenation
+    CheckOptions:
+      performance-unnecessary-value-param.AllowedTypes: 'std::function;std::shared_ptr;callback_t;x86::Mem'

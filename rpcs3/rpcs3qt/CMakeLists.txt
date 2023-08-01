@@ -143,16 +143,15 @@ target_compile_definitions(rpcs3_ui PRIVATE WIN32_LEAN_AND_MEAN)
 
 target_link_libraries(rpcs3_ui
     PUBLIC
-        3rdparty::qt6 3rdparty::yaml-cpp
+        3rdparty::libcurl # exported from curl_handle.h
+        3rdparty::qt6
 
     PRIVATE
+        3rdparty::7zip # update_manager.cpp
+        3rdparty::discordRPC # discord_utils.cpp
+        3rdparty::openal # microphone_creator.cpp
+        3rdparty::rtmidi # midi_creator.cpp
+        3rdparty::yaml-cpp # config_adapter.cpp
+        3rdparty::libpng # gs_frame.cpp
         rpcs3_emu
-        3rdparty::zlib 3rdparty::pugixml
-        3rdparty::discordRPC
-        3rdparty::hidapi
-        3rdparty::libusb
-        3rdparty::libpng
-        3rdparty::7zip
-        3rdparty::wolfssl
-        3rdparty::libcurl
-        3rdparty::rtmidi)
+)

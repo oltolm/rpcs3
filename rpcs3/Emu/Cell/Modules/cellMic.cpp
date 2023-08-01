@@ -3,6 +3,8 @@
 #include "Emu/Cell/PPUModule.h"
 #include "Utilities/StrUtil.h"
 
+#include <alext.h>
+
 #include "cellMic.h"
 #include <Emu/IdManager.h>
 #include <Emu/Cell/lv2/sys_event.h>

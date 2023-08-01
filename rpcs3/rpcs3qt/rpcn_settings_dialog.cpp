@@ -16,8 +16,17 @@
 #include "Emu/NP/rpcn_config.h"
 #include "Emu/NP/ip_address.h"
 
+#ifdef __clang__
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wold-style-cast"
+#endif
+
 #include <wolfssl/ssl.h>
 #include <wolfssl/openssl/evp.h>
+
+#ifdef __clang__
+#pragma GCC diagnostic pop
+#endif
 
 LOG_CHANNEL(rpcn_settings_log, "rpcn settings dlg");
 

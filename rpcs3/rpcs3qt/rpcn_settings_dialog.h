@@ -8,6 +8,8 @@
 
 #include "Emu/NP/rpcn_client.h"
 
+class QComboBox;
+
 class rpcn_settings_dialog : public QDialog
 {
 	Q_OBJECT

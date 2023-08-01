@@ -51,7 +51,7 @@ void WIN32_module_verifier::run_module_verification()
 		}
 
 		WCHAR wpath[MAX_PATH];
-		if (const auto len = GetModuleFileName(hModule, wpath, MAX_PATH))
+		if (GetModuleFileName(hModule, wpath, MAX_PATH))
 		{
 			if (::StrStrI(wpath, windir) != wpath)
 			{

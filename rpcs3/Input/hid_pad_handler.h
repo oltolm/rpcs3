@@ -4,7 +4,7 @@
 #include "Utilities/CRC.h"
 #include "Utilities/Thread.h"
 
-#include "hidapi.h"
+#include <hidapi.h>
 
 #include <mutex>
 

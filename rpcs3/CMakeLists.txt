@@ -13,23 +13,23 @@ set(CMAKE_CXX_STANDARD 20)
 set(ADDITIONAL_LIBS "")
 if(CMAKE_SYSTEM_NAME STREQUAL "Linux")
     #on some Linux distros shm_unlink and similar functions are in librt only
-    set(ADDITIONAL_LIBS ${ADDITIONAL_LIBS} "rt")
+    list(APPEND ADDITIONAL_LIBS "rt")
 elseif(NOT WIN32 AND NOT CMAKE_CXX_FLAGS MATCHES "LIBICONV_PLUG")
     #it seems like glibc includes the iconv functions we use but other libc
     #implementations like the one on OSX don't seem implement them
-    set(ADDITIONAL_LIBS ${ADDITIONAL_LIBS} "iconv")
+    list(APPEND ADDITIONAL_LIBS "iconv")
 endif()
 
 if(UNIX AND NOT APPLE)
-    add_definitions(-DDATADIR="${CMAKE_INSTALL_FULL_DATADIR}/rpcs3")
+    add_compile_definitions(DATADIR="${CMAKE_INSTALL_FULL_DATADIR}/rpcs3")
     # Optionally enable X11 for window management
     find_package(X11)
     if(X11_FOUND)
-        add_definitions(-DHAVE_X11)
+        add_compile_definitions(HAVE_X11)
     endif()
     find_package(Wayland)
     if(WAYLAND_FOUND)
-        add_definitions(-DHAVE_WAYLAND)
+        add_compile_definitions(HAVE_WAYLAND)
     endif()
 endif()
 
@@ -99,20 +99,15 @@ set_target_properties(rpcs3
         AUTOMOC ON
         AUTOUIC ON)
 
-target_link_libraries(rpcs3
-    PRIVATE
-        rpcs3_emu
-        rpcs3_ui
-        3rdparty::discordRPC
-        3rdparty::qt6
-        3rdparty::hidapi
-        3rdparty::libusb
-        3rdparty::wolfssl
-        3rdparty::libcurl
-        3rdparty::zlib
-        3rdparty::opencv
-        3rdparty::fusion
-        ${ADDITIONAL_LIBS})
+target_link_libraries(rpcs3 PRIVATE
+    rpcs3_ui
+    3rdparty::hidapi # hid_pad_handler.cpp imports <hidapi.h>
+    3rdparty::stblib # stb_image.cpp imports <stb_image.h>
+    3rdparty::cubeb # main_application imports <cubeb.h>
+    3rdparty::ffmpeg # raw_mouse_handler.cpp imports <libavutil/pixfmt.h>
+    ${ADDITIONAL_LIBS}
+)
+target_include_directories(rpcs3 PRIVATE ${PROJECT_SOURCE_DIR} ${CMAKE_CURRENT_SOURCE_DIR})
 
 # Unix display manager
 if(X11_FOUND)

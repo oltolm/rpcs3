@@ -24,16 +24,9 @@ if(USE_ASAN)
     set_source_files_properties(../../Utilities/Thread.cpp PROPERTIES COMPILE_DEFINITIONS USE_ASAN)
 endif()
 
-target_link_libraries(rpcs3_emu
-    PRIVATE
-        3rdparty::zlib 3rdparty::yaml-cpp 3rdparty::zstd
-    PUBLIC
-        3rdparty::libevdev 3rdparty::flatbuffers)
-
-
 find_package(Threads REQUIRED)
 target_link_libraries(rpcs3_emu
-    PUBLIC Threads::Threads)
+    PRIVATE Threads::Threads)
 
 # For stdafx.h
 target_include_directories(rpcs3_emu
@@ -151,23 +144,8 @@ if(WIN32)
         Audio/XAudio2/xaudio2_enumerator.cpp
     )
     target_compile_definitions(rpcs3_emu PRIVATE UNICODE _UNICODE _WIN32_WINNT=0x0A00)
+    target_link_libraries(rpcs3_emu PRIVATE pdh) # cpu_stats.cpp
 endif()
-
-target_link_libraries(rpcs3_emu
-    PUBLIC
-        3rdparty::openal)
-
-target_link_libraries(rpcs3_emu
-    PUBLIC
-        3rdparty::cubeb)
-
-target_link_libraries(rpcs3_emu
-    PUBLIC
-        3rdparty::soundtouch)
-
-target_link_libraries(rpcs3_emu
-    PUBLIC
-        3rdparty::miniupnpc)
 
 # Cell
 target_sources(rpcs3_emu PRIVATE
@@ -380,11 +358,6 @@ if(NOT MSVC)
     )
 endif()
 
-target_link_libraries(rpcs3_emu
-    PRIVATE
-        3rdparty::stblib 3rdparty::libpng)
-
-
 # CPU
 target_sources(rpcs3_emu PRIVATE
     CPU/CPUThread.cpp
@@ -434,10 +407,6 @@ target_sources(rpcs3_emu PRIVATE
     Io/usb_device.cpp
     Io/usb_vfs.cpp
     Io/usio.cpp
-)
-
-target_link_libraries(rpcs3_emu PRIVATE
-    3rdparty::rtmidi
 )
 
 # Np
@@ -613,14 +582,40 @@ if(TARGET 3rdparty_vulkan)
     )
 endif()
 
+if(WITH_LLVM)
+    target_compile_definitions(rpcs3_emu PUBLIC LLVM_AVAILABLE)
+endif()
+
+if(USE_VULKAN)
+    target_compile_definitions(rpcs3_emu PUBLIC HAVE_VULKAN)
+endif()
+
 target_link_libraries(rpcs3_emu
     PUBLIC
-        3rdparty::ffmpeg 3rdparty::sdl2
-        3rdparty::opengl 3rdparty::stblib
-        3rdparty::vulkan 3rdparty::glew
-        3rdparty::libusb 3rdparty::wolfssl
+    3rdparty::ffmpeg # exported from rsx_utils.h
+    3rdparty::flatbuffers # exported from rpcn_client.h
+    3rdparty::libusb # exported from usb_device.h
+    3rdparty::opengl # exported from OpenGL.h
+    3rdparty::pugixml # exported from rXml.h
+    3rdparty::stblib # exported from overlay_fonts.h
+    3rdparty::wolfssl # exported from rpcn_client.h
+    3rdparty::zlib # exported from unself.h
     PRIVATE
-        3rdparty::xxhash
+    3rdparty::asmjit
+    3rdparty::cubeb
+    3rdparty::glew
+    3rdparty::libevdev
+    3rdparty::libpng
+    3rdparty::llvm # exports LLVM_AVAILABLE
+    3rdparty::miniupnpc
+    3rdparty::rtmidi
+    3rdparty::sdl2
+    3rdparty::soundtouch
+    3rdparty::vulkan # exports HAVE_VULKAN
+    3rdparty::xxhash
+    3rdparty::yaml-cpp # yaml.cpp
+    3rdparty::openal # cellMic.cpp
+    3rdparty::zstd # serialization_ext.cpp
 )
 
 if(APPLE)

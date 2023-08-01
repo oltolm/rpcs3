@@ -2,19 +2,15 @@
 
 #include "util/types.hpp"
 #include "Emu/Audio/AudioBackend.h"
-
-#ifndef _MSC_VER
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wsuggest-override"
-#pragma GCC diagnostic ignored "-Wold-style-cast"
-#endif
-#include "SoundTouch.h"
-#ifndef _MSC_VER
-#pragma GCC diagnostic pop
-#endif
+#include <memory>
 
 constexpr f64 RESAMPLER_MAX_FREQ_VAL = 1.0;
 constexpr f64 RESAMPLER_MIN_FREQ_VAL = 0.1;
+
+namespace soundtouch
+{
+	class SoundTouch;
+}
 
 class audio_resampler
 {
@@ -34,5 +30,5 @@ public:
 	void flush();
 
 private:
-	soundtouch::SoundTouch resampler{};
+	std::unique_ptr<soundtouch::SoundTouch> resampler;
 };

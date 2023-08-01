@@ -2,6 +2,7 @@
 
 #include <optional>
 
+#include <QComboBox>
 #include <QDialog>
 #include <QLineEdit>
 #include <QListWidget>

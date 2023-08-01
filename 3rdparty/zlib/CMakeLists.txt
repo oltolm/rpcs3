@@ -14,8 +14,4 @@ else()
 	target_link_libraries(3rdparty_zlib INTERFACE zlibstatic)
 	target_include_directories(3rdparty_zlib INTERFACE zlib ${CMAKE_CURRENT_BINARY_DIR}/zlib)
 	target_compile_definitions(3rdparty_zlib INTERFACE -DZLIB_CONST=1)
-
-	if(NOT MSVC)
-		set(ZLIB_ROOT ${CMAKE_CURRENT_BINARY_DIR}/zlib PARENT_SCOPE)
-	endif()
 endif()

@@ -3,12 +3,9 @@
 #include <mutex>
 #include <thread>
 #include <chrono>
-#include <queue>
 #include "rpcn_client.h"
-#include "np_structs_extra.h"
 #include "Utilities/StrUtil.h"
 #include "Utilities/Thread.h"
-#include "Emu/IdManager.h"
 #include "Emu/System.h"
 #include "Emu/NP/rpcn_config.h"
 #include "Emu/NP/np_helpers.h"

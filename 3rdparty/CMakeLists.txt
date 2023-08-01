@@ -224,7 +224,7 @@ if(USE_FAUDIO)
 	if (USE_SYSTEM_FAUDIO)
 		if (NOT SDL2_FOUND OR SDL2_VERSION VERSION_LESS 2.0.12)
 			message(WARNING
-				"RPCS3: FAudio requires SDL 2.0.9 or newer. Please note, this warning"
+				"RPCS3: System FAudio requires SDL 2.0.9 or newer. Please note, this warning"
 				"can also be displayed with SDL2 versions between 2.0.9-2.0.12, as the"
 				"CMake config files are not correctly installed. Since a valid SDL2"
 				">=2.0.9 version cannot be found, building with FAudio will be skipped.")

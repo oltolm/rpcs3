@@ -1,9 +1,10 @@
 #pragma once
 
 #include "Utilities/Thread.h"
-#include "Emu/Cell/timers.hpp"
+#include "Emu/Cell/ErrorCodes.h"
+#include "Emu/system_config_types.h"
 
-#include "3rdparty/OpenAL/openal-soft/include/AL/alext.h"
+struct ALCdevice;
 
 // Error Codes
 enum CellMicInError : u32

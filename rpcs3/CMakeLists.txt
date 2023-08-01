@@ -90,9 +90,15 @@ set_target_properties(rpcs3
         AUTOMOC ON
         AUTOUIC ON)
 
-target_link_libraries(rpcs3 PRIVATE rpcs3_emu rpcs3_ui)
-target_link_libraries(rpcs3 PRIVATE 3rdparty::discordRPC 3rdparty::qt6 3rdparty::hidapi 3rdparty::libusb 3rdparty::wolfssl 3rdparty::libcurl 3rdparty::zlib)
+target_link_libraries(rpcs3 PRIVATE rpcs3_ui)
+target_link_libraries(rpcs3 PRIVATE
+    3rdparty::cubeb # main_application.cpp
+    3rdparty::ffmpeg # headless_application.cpp
+    3rdparty::hidapi # imported in hid_pad_handler.cpp
+    3rdparty::stblib # stb_image.cpp
+)
 target_link_libraries(rpcs3 PRIVATE ${ADDITIONAL_LIBS})
+target_include_directories(rpcs3 PRIVATE ${PROJECT_SOURCE_DIR} ${CMAKE_CURRENT_SOURCE_DIR})
 
 # Unix display manager
 if(X11_FOUND)
@@ -109,7 +115,7 @@ if(UNIX)
 endif()
 
 if(WIN32)
-    target_link_libraries(rpcs3 PRIVATE ws2_32 Iphlpapi Winmm Psapi gdi32 setupapi pdh)
+    target_link_libraries(rpcs3 PRIVATE ws2_32 Iphlpapi Winmm Psapi gdi32 setupapi)
 else()
     target_link_libraries(rpcs3 PRIVATE ${CMAKE_DL_LIBS})
 endif()

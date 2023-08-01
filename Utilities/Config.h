@@ -1,7 +1,7 @@
 #pragma once
 
 #include "util/types.hpp"
-#include "Utilities/StrUtil.h"
+#include "StrUtil.h"
 #include "util/logs.hpp"
 #include "util/atomic.hpp"
 #include "util/shared_ptr.hpp"

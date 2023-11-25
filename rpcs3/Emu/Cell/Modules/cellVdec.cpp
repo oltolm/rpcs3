@@ -286,6 +286,7 @@ struct vdec_context final
 
 	void exec(ppu_thread& ppu, u32 vid)
 	{
+		constexpr u64 time_base = 90000;
 		perf_meter<"VDEC"_u32> perf0;
 
 		ppu_tid.release(ppu.id);
@@ -425,10 +426,10 @@ struct vdec_context final
 							fmt::throw_exception("AU decoding error (handle=0x%x, seq_id=%d, cmd_id=%d, error=0x%x): %s", handle, cmd->seq_id, cmd->id, ret, utils::av_error_to_string(ret));
 						}
 
-						if (frame->interlaced_frame)
+						if (frame->flags & AV_FRAME_FLAG_INTERLACED)
 						{
 							// NPEB01838, NPUB31260
-							cellVdec.todo("Interlaced frames not supported (handle=0x%x, seq_id=%d, cmd_id=%d, interlaced_frame=0x%x)", handle, cmd->seq_id, cmd->id, frame->interlaced_frame);
+							cellVdec.todo("Interlaced frames not supported (handle=0x%x, seq_id=%d, cmd_id=%d, interlaced_frame=0x%x)", handle, cmd->seq_id, cmd->id, frame->flags & AV_FRAME_FLAG_INTERLACED);
 						}
 
 						if (frame->repeat_pict)
@@ -457,14 +458,14 @@ struct vdec_context final
 
 							switch (frc_set)
 							{
-							case CELL_VDEC_FRC_24000DIV1001: amend = 1001 * 90000 / 24000; break;
-							case CELL_VDEC_FRC_24: amend = 90000 / 24; break;
-							case CELL_VDEC_FRC_25: amend = 90000 / 25; break;
-							case CELL_VDEC_FRC_30000DIV1001: amend = 1001 * 90000 / 30000; break;
-							case CELL_VDEC_FRC_30: amend = 90000 / 30; break;
-							case CELL_VDEC_FRC_50: amend = 90000 / 50; break;
-							case CELL_VDEC_FRC_60000DIV1001: amend = 1001 * 90000 / 60000; break;
-							case CELL_VDEC_FRC_60: amend = 90000 / 60; break;
+							case CELL_VDEC_FRC_24000DIV1001: amend = 1001 * time_base / 24000; break;
+							case CELL_VDEC_FRC_24: amend = time_base / 24; break;
+							case CELL_VDEC_FRC_25: amend = time_base / 25; break;
+							case CELL_VDEC_FRC_30000DIV1001: amend = 1001 * time_base / 30000; break;
+							case CELL_VDEC_FRC_30: amend = time_base / 30; break;
+							case CELL_VDEC_FRC_50: amend = time_base / 50; break;
+							case CELL_VDEC_FRC_60000DIV1001: amend = 1001 * time_base / 60000; break;
+							case CELL_VDEC_FRC_60: amend = time_base / 60; break;
 							default:
 							{
 								fmt::throw_exception("Invalid frame rate code set (handle=0x%x, seq_id=%d, cmd_id=%d, frc=0x%x)", handle, cmd->seq_id, cmd->id, frc_set);
@@ -475,24 +476,24 @@ struct vdec_context final
 							next_dts += amend;
 							frame.frc = frc_set;
 						}
-						else if (ctx->time_base.num == 0)
+						else if (ctx->framerate.num == 0)
 						{
 							if (log_time_base.den != ctx->time_base.den || log_time_base.num != ctx->time_base.num)
 							{
-								cellVdec.error("time_base.num is 0 (handle=0x%x, seq_id=%d, cmd_id=%d, %d/%d, tpf=%d framerate=%d/%d)", handle, cmd->seq_id, cmd->id, ctx->time_base.num, ctx->time_base.den, ctx->ticks_per_frame, ctx->framerate.num, ctx->framerate.den);
+								cellVdec.error("framerate.num is 0 (handle=0x%x, seq_id=%d, cmd_id=%d, %d/%d, framerate=%d/%d)", handle, cmd->seq_id, cmd->id, ctx->time_base.num, ctx->time_base.den, ctx->framerate.num, ctx->framerate.den);
 								log_time_base = ctx->time_base;
 							}
 
 							// Hack
-							const u64 amend = u64{90000} / 30;
+							const u64 amend = time_base / 30;
 							frame.frc = CELL_VDEC_FRC_30;
 							next_pts += amend;
 							next_dts += amend;
 						}
 						else
 						{
-							u64 amend = u64{90000} * ctx->time_base.num * ctx->ticks_per_frame / ctx->time_base.den;
-							const auto freq = 1. * ctx->time_base.den / ctx->time_base.num / ctx->ticks_per_frame;
+							u64 amend = time_base * ctx->framerate.den / ctx->framerate.num;
+							const auto freq = av_q2d(ctx->framerate);
 
 							if (std::abs(freq - 23.976) < 0.002)
 								frame.frc = CELL_VDEC_FRC_24000DIV1001;
@@ -514,13 +515,12 @@ struct vdec_context final
 							{
 								if (log_time_base.den != ctx->time_base.den || log_time_base.num != ctx->time_base.num)
 								{
-									// 1/1000 usually means that the time stamps are written in 1ms units and that the frame rate may vary.
-									cellVdec.error("Unsupported time_base (handle=0x%x, seq_id=%d, cmd_id=%d, %d/%d, tpf=%d framerate=%d/%d)", handle, cmd->seq_id, cmd->id, ctx->time_base.num, ctx->time_base.den, ctx->ticks_per_frame, ctx->framerate.num, ctx->framerate.den);
+									cellVdec.error("Unsupported time_base (handle=0x%x, seq_id=%d, cmd_id=%d, %d/%d, framerate=%d/%d)", handle, cmd->seq_id, cmd->id, ctx->time_base.num, ctx->time_base.den, ctx->framerate.num, ctx->framerate.den);
 									log_time_base = ctx->time_base;
 								}
 
 								// Hack
-								amend = u64{90000} / 30;
+								amend = time_base / 30;
 								frame.frc = CELL_VDEC_FRC_30;
 							}
 

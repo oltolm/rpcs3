@@ -27,7 +27,6 @@
         "USE_SYSTEM_CURL": "OFF",
         "USE_SYSTEM_ZLIB": "OFF",
         "USE_SYSTEM_LIBPNG": "OFF",
-        "LLVM_ENABLE_LIBCXX": "ON",
         "USE_NATIVE_INSTRUCTIONS": "ON",
         "USE_PRECOMPILED_HEADERS": "ON",
         "BUILD_LLVM": "OFF",

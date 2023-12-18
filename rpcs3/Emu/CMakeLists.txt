@@ -170,6 +170,7 @@ target_link_libraries(rpcs3_emu
 
 # Cell
 target_sources(rpcs3_emu PRIVATE
+    Cell/DebugIR.cpp
     Cell/MFC.cpp
     Cell/PPUAnalyser.cpp
     Cell/PPUDisAsm.cpp
@@ -373,7 +374,7 @@ target_sources(rpcs3_emu PRIVATE
 )
 
 if(NOT MSVC)
-    set_source_files_properties(Cell/PPUTranslator.cpp PROPERTIES
+    set_source_files_properties(Cell/PPUTranslator.cpp Cell/DebugIR.cpp PROPERTIES
         COMPILE_FLAGS -fno-rtti
         SKIP_PRECOMPILE_HEADERS ON
     )

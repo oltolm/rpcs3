@@ -104,7 +104,7 @@ endif()
 if(UNIX)
     set(CMAKE_THREAD_PREFER_PTHREAD TRUE)
     find_package(Threads REQUIRED)
-    target_link_libraries(rpcs3 PRIVATE Threads::Threads)
+    target_link_libraries(rpcs3 PRIVATE Threads::Threads tbb)
 endif()
 
 if(WIN32)

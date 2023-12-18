@@ -27,6 +27,7 @@
 #include "lv2/sys_overlay.h"
 #include "lv2/sys_process.h"
 #include "lv2/sys_spu.h"
+#include <system_error>
 
 #ifdef LLVM_AVAILABLE
 #ifdef _MSC_VER
@@ -38,6 +39,11 @@
 #pragma GCC diagnostic ignored "-Wmissing-noreturn"
 #pragma GCC diagnostic ignored "-Wstrict-aliasing"
 #endif
+#include "DebugIR.h"
+#include <llvm/Support/FileSystem.h>
+#include <llvm/Support/raw_ostream.h>
+#include <llvm/Support/Debug.h>
+#include <llvm/IR/Module.h>
 #include <llvm/IR/Verifier.h>
 #include <llvm/Transforms/Utils/BasicBlockUtils.h>
 #include <llvm/Analysis/CGSCCPassManager.h>
@@ -5660,15 +5666,31 @@ static void ppu_initialize2(jit_compiler& jit, const ppu_module<lv2_obj>& module
 		//mpm.add(createDeadInstEliminationPass());
 		//mpm.run(*module);
 
-		std::string result;
-		raw_string_ostream out(result);
-
 		if (g_cfg.core.llvm_logs)
 		{
-			out << *_module; // print IR
-			fs::write_file(cache_path + obj_name + ".log", fs::rewrite, out.str());
-			result.clear();
+			auto display_module = createDebugInfo(*_module.get(), cache_path, obj_name + ".ll");
+
+			std::error_code ec;
+			llvm::raw_fd_ostream os(cache_path + obj_name + ".ll", ec, llvm::sys::fs::CD_OpenAlways);
+			if (ec.value() != 0)
+			{
+				ppu_log.error("LLVM: Failed to create module IR: %s", display_module->getName().data());
+				return;
+			}
+
+			display_module->print(os, nullptr);
+			if (os.has_error())
+			{
+				ppu_log.error("LLVM: Failed to write module IR: %s", display_module->getName().data());
+				fs::remove_file(cache_path + obj_name + ".ll");
+				return;
+			}
+
+			ppu_log.notice("LLVM: Wrote module IR: %s", display_module->getName().data());
 		}
+
+		std::string result;
+		raw_string_ostream out(result);
 
 		if (verifyModule(*_module, &out))
 		{

@@ -1,5 +1,9 @@
 #pragma once
 
+#include <vector>
+#include "util/types.hpp"
+#include "Utilities/File.h"
+
 std::vector<u8> unzip(const void* src, usz size);
 
 template <typename T>

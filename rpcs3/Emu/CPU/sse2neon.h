@@ -97,8 +97,8 @@
 #define _sse2neon_unlikely(x) (x)
 #endif
 
-#include <stdint.h>
-#include <stdlib.h>
+#include <cstdint>
+#include <cstdlib>
 
 /* Architecture-specific build options */
 /* FIXME: #pragma GCC push_options is only available on GCC */

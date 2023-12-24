@@ -149,7 +149,7 @@ std::optional<CellAudioInDeviceInfo> avconf_manager::get_device_info(vm::cptr<ch
 {
 	for (const CellAudioInDeviceInfo& device : devices)
 	{
-		if (strncmp(device.name, name.get_ptr(), sizeof(device.name)) == 0)
+		if (device.name == name.get_sv())
 		{
 			return device;
 		}

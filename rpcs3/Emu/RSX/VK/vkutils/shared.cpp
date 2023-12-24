@@ -1,5 +1,6 @@
 #include "shared.h"
 #include "util/logs.hpp"
+#include <string_view>
 
 #ifndef _WIN32
 #include <signal.h>
@@ -126,7 +127,7 @@ namespace vk
 	{
 		if (msgFlags & VK_DEBUG_REPORT_ERROR_BIT_EXT)
 		{
-			if (strstr(pMsg, "IMAGE_VIEW_TYPE_1D"))
+			if (std::string_view(pMsg).find("IMAGE_VIEW_TYPE_1D") != std::string_view::npos)
 				return false;
 
 			rsx_log.error("ERROR: [%s] Code %d : %s", pLayerPrefix, msgCode, pMsg);

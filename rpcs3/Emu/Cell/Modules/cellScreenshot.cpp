@@ -116,7 +116,7 @@ error_code cellScreenShotSetOverlayImage(vm::cptr<char> srcDir, vm::cptr<char> s
 	// TODO: check srcDir (size 1024) and srcFile (size 64) for '-' or '_' or '.' or '/' in some manner (range checks?)
 
 	// Make sure that srcDir starts with /dev_hdd0, /dev_bdvd, /app_home or /host_root
-	if (strncmp(srcDir.get_ptr(), "/dev_hdd0", 9) && strncmp(srcDir.get_ptr(), "/dev_bdvd", 9) && strncmp(srcDir.get_ptr(), "/app_home", 9) && strncmp(srcDir.get_ptr(), "/host_root", 10))
+	if (!srcDir.get_sv().starts_with("/dev_hdd0") && !srcDir.get_sv().starts_with("/dev_bdvd") && !srcDir.get_sv().starts_with("/app_home") && !srcDir.get_sv().starts_with("/host_root"))
 	{
 		return CELL_SCREENSHOT_ERROR_PARAM;
 	}

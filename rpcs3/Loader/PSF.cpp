@@ -2,6 +2,7 @@
 #include "PSF.h"
 
 #include "util/asm.hpp"
+#include <string_view>
 
 LOG_CHANNEL(psf_log, "PSF");
 
@@ -252,7 +253,7 @@ namespace psf
 				if (indices[i].param_fmt == format::string)
 				{
 					// Find null terminator
-					value.resize(std::strlen(value.c_str()));
+					value.resize(std::string_view(value.c_str()).size());
 				}
 
 				result.sfo.emplace(std::piecewise_construct,

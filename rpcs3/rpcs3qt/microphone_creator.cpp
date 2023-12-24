@@ -5,6 +5,7 @@
 #include "Utilities/StrUtil.h"
 
 #include "3rdparty/OpenAL/include/alext.h"
+#include <string_view>
 
 LOG_CHANNEL(cfg_log, "CFG");
 
@@ -28,10 +29,10 @@ void microphone_creator::refresh_list()
 	{
 		if (const char* devices = alcGetString(nullptr, ALC_CAPTURE_DEVICE_SPECIFIER))
 		{
-			while (*devices != 0)
+			while (*devices != '\0')
 			{
 				m_microphone_list.append(devices);
-				devices += strlen(devices) + 1;
+				devices += std::string_view(devices).size() + 1;
 			}
 		}
 	}

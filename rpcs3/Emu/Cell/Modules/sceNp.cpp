@@ -29,6 +29,9 @@
 #include "Emu/RSX/Overlays/Network/overlay_recvmessage_dialog.h"
 #include "Emu/RSX/Overlays/Network/overlay_sendmessage_dialog.h"
 
+#include <string>
+#include <string_view>
+
 LOG_CHANNEL(sceNp);
 
 error_code sceNpManagerGetNpId(vm::ptr<SceNpId> npId);
@@ -1886,7 +1889,7 @@ error_code sceNpBasicAddPlayersHistory(vm::cptr<SceNpId> npid, vm::cptr<char> de
 		return SCE_NP_BASIC_ERROR_INVALID_ARGUMENT;
 	}
 
-	if (description && strlen(description.get_ptr()) > SCE_NP_BASIC_DESCRIPTION_CHARACTER_MAX)
+	if (description && description.get_sv().size() > SCE_NP_BASIC_DESCRIPTION_CHARACTER_MAX)
 	{
 		return SCE_NP_BASIC_ERROR_EXCEEDS_MAX;
 	}
@@ -1930,7 +1933,7 @@ error_code sceNpBasicAddPlayersHistoryAsync(vm::cptr<SceNpId> npids, u32 count, 
 		}
 	}
 
-	if (description && strlen(description.get_ptr()) > SCE_NP_BASIC_DESCRIPTION_CHARACTER_MAX)
+	if (description && description.get_sv().size() > SCE_NP_BASIC_DESCRIPTION_CHARACTER_MAX)
 	{
 		return SCE_NP_BASIC_ERROR_EXCEEDS_MAX;
 	}
@@ -6069,7 +6072,7 @@ error_code scenp_score_censor_comment(s32 transId, vm::cptr<char> comment, vm::p
 		return SCE_NP_COMMUNITY_ERROR_INSUFFICIENT_ARGUMENT;
 	}
 
-	if (strlen(comment.get_ptr()) > SCE_NP_SCORE_CENSOR_COMMENT_MAXLEN || option) // option check at least until fw 4.71
+	if (comment.get_sv().size() > SCE_NP_SCORE_CENSOR_COMMENT_MAXLEN || option) // option check at least until fw 4.71
 	{
 		// TODO: is SCE_NP_SCORE_CENSOR_COMMENT_MAXLEN + 1 allowed ?
 		return SCE_NP_COMMUNITY_ERROR_INVALID_ARGUMENT;
@@ -6128,7 +6131,7 @@ error_code scenp_score_sanitize_comment(s32 transId, vm::cptr<char> comment, vm:
 		return SCE_NP_COMMUNITY_ERROR_INSUFFICIENT_ARGUMENT;
 	}
 
-	const auto comment_len = strlen(comment.get_ptr());
+	const auto comment_len = comment.get_sv().size();
 
 	if (comment_len > SCE_NP_SCORE_CENSOR_COMMENT_MAXLEN)
 	{

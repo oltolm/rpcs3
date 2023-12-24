@@ -166,7 +166,7 @@ std::optional<avconf_manager::device_info> avconf_manager::get_device_info(vm::c
 {
 	for (const device_info& device : devices)
 	{
-		if (strncmp(device.info.name, name.get_ptr(), sizeof(device.info.name)) == 0)
+		if (device.info.name == name.get_sv())
 		{
 			return device;
 		}

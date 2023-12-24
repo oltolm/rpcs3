@@ -1,4 +1,5 @@
 #include "stdafx.h"
+#include <string_view>
 #include "Emu/Cell/lv2/sys_process.h"
 #include "fb_helpers.h"
 

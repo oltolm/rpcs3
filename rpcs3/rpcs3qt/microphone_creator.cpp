@@ -28,7 +28,7 @@ void microphone_creator::refresh_list()
 	{
 		if (const char* devices = alcGetString(nullptr, ALC_CAPTURE_DEVICE_SPECIFIER))
 		{
-			while (devices && *devices != 0)
+			while (devices && *devices != '\0')
 			{
 				cfg_log.notice("Found microphone: '%s'", devices);
 				m_microphone_list.append(devices);

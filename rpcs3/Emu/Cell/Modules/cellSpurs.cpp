@@ -18,6 +18,7 @@
 #include "util/asm.hpp"
 #include "util/v128.hpp"
 #include "util/simd.hpp"
+#include <string_view>
 
 LOG_CHANNEL(cellSpurs);
 
@@ -1203,7 +1204,7 @@ s32 _spurs::initialize(ppu_thread& ppu, vm::ptr<CellSpurs> spurs, u32 revision, 
 	std::memcpy(spuTgName.get_ptr() + spurs->prefixSize, "CellSpursKernelGroup", 21);
 
 	spuTgAttr->name  = spuTgName;
-	spuTgAttr->nsize = static_cast<u32>(std::strlen(spuTgAttr->name.get_ptr())) + 1;
+	spuTgAttr->nsize = static_cast<u32>(spuTgAttr->name.get_sv().size()) + 1;
 	spuTgAttr->type  = SYS_SPU_THREAD_GROUP_TYPE_NORMAL;
 
 	if (spurs->flags & SAF_UNKNOWN_FLAG_0)
@@ -1241,7 +1242,7 @@ s32 _spurs::initialize(ppu_thread& ppu, vm::ptr<CellSpurs> spurs, u32 revision, 
 	std::memcpy(spuThName.get_ptr() + spurs->prefixSize, "CellSpursKernel", 16);
 
 	spuThAttr->name                    = spuThName;
-	spuThAttr->name_len                = static_cast<u32>(std::strlen(spuThName.get_ptr())) + 2;
+	spuThAttr->name_len                = static_cast<u32>(spuThName.get_sv().size()) + 2;
 	spuThAttr->option                  = SYS_SPU_THREAD_OPTION_DEC_SYNC_TB_ENABLE;
 	spuThName[spuThAttr->name_len - 1] = '\0';
 

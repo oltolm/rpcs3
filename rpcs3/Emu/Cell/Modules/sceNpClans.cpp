@@ -3,6 +3,7 @@
 #include "Emu/IdManager.h"
 
 #include "sceNp.h"
+#include <string_view>
 #include "sceNpClans.h"
 
 LOG_CHANNEL(sceNpClans);
@@ -175,7 +176,7 @@ error_code sceNpClansCreateClan(vm::ptr<SceNpClansRequestHandle> handle, vm::cpt
 		return SCE_NP_CLANS_ERROR_INVALID_ARGUMENT;
 	}
 
-	if (strlen(name.get_ptr()) > SCE_NP_CLANS_CLAN_NAME_MAX_LENGTH || strlen(tag.get_ptr()) > SCE_NP_CLANS_CLAN_TAG_MAX_LENGTH)
+	if (name.get_sv().size() > SCE_NP_CLANS_CLAN_NAME_MAX_LENGTH || tag.get_sv().size() > SCE_NP_CLANS_CLAN_TAG_MAX_LENGTH)
 	{
 		return SCE_NP_CLANS_ERROR_EXCEEDS_MAX;
 	}

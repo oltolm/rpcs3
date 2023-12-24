@@ -1,6 +1,7 @@
 #pragma once
 
 #include "capabilities.h"
+#include <string_view>
 
 #define GL_FRAGMENT_TEXTURES_START 0
 #define GL_VERTEX_TEXTURES_START   (GL_FRAGMENT_TEXTURES_START + 16)
@@ -77,7 +78,7 @@ namespace gl
 	// Very useful util when capturing traces with RenderDoc
 	static inline void push_debug_label(const char* label)
 	{
-		glInsertEventMarkerEXT(static_cast<GLsizei>(strlen(label)), label);
+		glInsertEventMarkerEXT(static_cast<GLsizei>(std::string_view(label).size()), label);
 	}
 
 	// Checks if GL state is still valid

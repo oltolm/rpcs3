@@ -18,6 +18,7 @@
 #include <QMessageBox>
 #include <QMetaEnum>
 #include <QStandardPaths>
+#include <string_view>
 
 #include "rpcs3qt/gui_application.h"
 #include "rpcs3qt/fatal_error_dialog.h"
@@ -335,7 +336,7 @@ int find_arg(std::string arg, int& argc, char* argv[])
 {
 	arg = "--" + arg;
 	for (int i = 0; i < argc; ++i) // It's not guaranteed that argv 0 is the executable.
-		if (!strcmp(arg.c_str(), argv[i]))
+		if (arg == argv[i])
 			return i;
 	return -1;
 }
@@ -370,7 +371,7 @@ QCoreApplication* create_application(int& argc, char* argv[])
 	{
 		const std::string cmp_str = "0";
 		const auto i_hdpi_2 = (argc > (i_hdpi + 1)) ? (i_hdpi + 1) : 0;
-		const auto high_dpi_setting = (i_hdpi_2 && !strcmp(cmp_str.c_str(), argv[i_hdpi_2])) ? "0" : "1";
+		const auto high_dpi_setting = (i_hdpi_2 && cmp_str == argv[i_hdpi_2]) ? "0" : "1";
 
 		// Set QT_ENABLE_HIGHDPI_SCALING from environment. Defaults to cli argument, which defaults to 1.
 		use_high_dpi = "1" == qEnvironmentVariable("QT_ENABLE_HIGHDPI_SCALING", high_dpi_setting);
@@ -589,7 +590,7 @@ int main(int argc, char** argv)
 		os.text = utils::get_OS_version();
 
 		// Write Qt version
-		logs::stored_message qt{(strcmp(QT_VERSION_STR, qVersion()) != 0) ? sys_log.error : sys_log.notice};
+		logs::stored_message qt{(std::string_view(QT_VERSION_STR) != qVersion()) ? sys_log.error : sys_log.notice};
 		qt.text = fmt::format("Qt version: Compiled against Qt %s | Run-time uses Qt %s", QT_VERSION_STR, qVersion());
 
 		logs::stored_message time{sys_log.always()};

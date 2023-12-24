@@ -1,5 +1,6 @@
 #include "stdafx.h"
 #include "np_handler.h"
+#include <string_view>
 #include "Emu/Cell/lv2/sys_process.h"
 #include "fb_helpers.h"
 
@@ -245,7 +246,7 @@ namespace np
 		for (u32 i = 0; i < room_info->memberList.membersNum; i++)
 		{
 			SceNpMatching2RoomMemberDataInternal* sce_member = &room_info->memberList.members[i];
-			if (strcmp(sce_member->userInfo.npId.handle.data, npid.handle.data) == 0)
+			if (std::string_view(sce_member->userInfo.npId.handle.data) == npid.handle.data)
 			{
 				room_info->memberList.me = room_info->memberList.members + i;
 				edata.add_relocation<SceNpMatching2RoomMemberDataInternal>(room_info->memberList.me);

@@ -3,6 +3,7 @@
 #include "Emu/IdManager.h"
 
 #include "sceNp.h"
+#include <string_view>
 #include "sceNpClans.h"
 
 LOG_CHANNEL(sceNpClans);
@@ -175,7 +176,7 @@ error_code sceNpClansCreateClan(vm::ptr<SceNpClansRequestHandle> handle, vm::cpt
 		return SCE_NP_CLANS_ERROR_INVALID_ARGUMENT;
 	}
 
-	if (strlen(name.get_ptr()) > SCE_NP_CLANS_CLAN_NAME_MAX_LENGTH || strlen(tag.get_ptr()) > SCE_NP_CLANS_CLAN_TAG_MAX_LENGTH)
+	if (name.get_sv().size() > SCE_NP_CLANS_CLAN_NAME_MAX_LENGTH || tag.get_sv().size() > SCE_NP_CLANS_CLAN_TAG_MAX_LENGTH)
 	{
 		return SCE_NP_CLANS_ERROR_EXCEEDS_MAX;
 	}
@@ -487,7 +488,7 @@ error_code sceNpClansKickMember(vm::ptr<SceNpClansRequestHandle> handle, SceNpCl
 
 	if (message)
 	{
-		if (strlen(message->body) > SCE_NP_CLANS_MESSAGE_BODY_MAX_LENGTH || strlen(message->subject) > SCE_NP_CLANS_MESSAGE_SUBJECT_MAX_LENGTH) // TODO: correct max?
+		if (std::string_view(message->body).size() > SCE_NP_CLANS_MESSAGE_BODY_MAX_LENGTH || std::string_view(message->subject).size() > SCE_NP_CLANS_MESSAGE_SUBJECT_MAX_LENGTH) // TODO: correct max?
 		{
 			return SCE_NP_CLANS_ERROR_EXCEEDS_MAX;
 		}
@@ -512,7 +513,7 @@ error_code sceNpClansSendInvitation(vm::ptr<SceNpClansRequestHandle> handle, Sce
 
 	if (message)
 	{
-		if (strlen(message->body) > SCE_NP_CLANS_MESSAGE_BODY_MAX_LENGTH || strlen(message->subject) > SCE_NP_CLANS_MESSAGE_SUBJECT_MAX_LENGTH) // TODO: correct max?
+		if (std::string_view(message->body).size() > SCE_NP_CLANS_MESSAGE_BODY_MAX_LENGTH || std::string_view(message->subject).size() > SCE_NP_CLANS_MESSAGE_SUBJECT_MAX_LENGTH) // TODO: correct max?
 		{
 			return SCE_NP_CLANS_ERROR_EXCEEDS_MAX;
 		}
@@ -549,7 +550,7 @@ error_code sceNpClansSendInvitationResponse(vm::ptr<SceNpClansRequestHandle> han
 
 	if (message)
 	{
-		if (strlen(message->body) > SCE_NP_CLANS_MESSAGE_BODY_MAX_LENGTH || strlen(message->subject) > SCE_NP_CLANS_MESSAGE_SUBJECT_MAX_LENGTH) // TODO: correct max?
+		if (std::string_view(message->body).size() > SCE_NP_CLANS_MESSAGE_BODY_MAX_LENGTH || std::string_view(message->subject).size() > SCE_NP_CLANS_MESSAGE_SUBJECT_MAX_LENGTH) // TODO: correct max?
 		{
 			return SCE_NP_CLANS_ERROR_EXCEEDS_MAX;
 		}
@@ -569,7 +570,7 @@ error_code sceNpClansSendMembershipRequest(vm::ptr<SceNpClansRequestHandle> hand
 
 	if (message)
 	{
-		if (strlen(message->body) > SCE_NP_CLANS_MESSAGE_BODY_MAX_LENGTH || strlen(message->subject) > SCE_NP_CLANS_MESSAGE_SUBJECT_MAX_LENGTH) // TODO: correct max?
+		if (std::string_view(message->body).size() > SCE_NP_CLANS_MESSAGE_BODY_MAX_LENGTH || std::string_view(message->subject).size() > SCE_NP_CLANS_MESSAGE_SUBJECT_MAX_LENGTH) // TODO: correct max?
 		{
 			return SCE_NP_CLANS_ERROR_EXCEEDS_MAX;
 		}
@@ -606,7 +607,7 @@ error_code sceNpClansSendMembershipResponse(vm::ptr<SceNpClansRequestHandle> han
 
 	if (message)
 	{
-		if (strlen(message->body) > SCE_NP_CLANS_MESSAGE_BODY_MAX_LENGTH || strlen(message->subject) > SCE_NP_CLANS_MESSAGE_SUBJECT_MAX_LENGTH) // TODO: correct max?
+		if (std::string_view(message->body).size() > SCE_NP_CLANS_MESSAGE_BODY_MAX_LENGTH || std::string_view(message->subject).size() > SCE_NP_CLANS_MESSAGE_SUBJECT_MAX_LENGTH) // TODO: correct max?
 		{
 			return SCE_NP_CLANS_ERROR_EXCEEDS_MAX;
 		}
@@ -718,7 +719,7 @@ error_code sceNpClansPostAnnouncement(vm::ptr<SceNpClansRequestHandle> handle, S
 		return SCE_NP_CLANS_ERROR_NOT_SUPPORTED;
 	}
 
-	if (strlen(message->body) > SCE_NP_CLANS_ANNOUNCEMENT_MESSAGE_BODY_MAX_LENGTH || strlen(message->subject) > SCE_NP_CLANS_MESSAGE_SUBJECT_MAX_LENGTH) // TODO: correct max?
+	if (std::string_view(message->body).size() > SCE_NP_CLANS_ANNOUNCEMENT_MESSAGE_BODY_MAX_LENGTH || std::string_view(message->subject).size() > SCE_NP_CLANS_MESSAGE_SUBJECT_MAX_LENGTH) // TODO: correct max?
 	{
 		return SCE_NP_CLANS_ERROR_EXCEEDS_MAX;
 	}
@@ -757,7 +758,7 @@ error_code sceNpClansPostChallenge(vm::ptr<SceNpClansRequestHandle> handle, SceN
 		return SCE_NP_CLANS_ERROR_NOT_SUPPORTED;
 	}
 
-	if (strlen(message->body) > SCE_NP_CLANS_ANNOUNCEMENT_MESSAGE_BODY_MAX_LENGTH || strlen(message->subject) > SCE_NP_CLANS_MESSAGE_SUBJECT_MAX_LENGTH) // TODO: correct max?
+	if (std::string_view(message->body).size() > SCE_NP_CLANS_ANNOUNCEMENT_MESSAGE_BODY_MAX_LENGTH || std::string_view(message->subject).size() > SCE_NP_CLANS_MESSAGE_SUBJECT_MAX_LENGTH) // TODO: correct max?
 	{
 		return SCE_NP_CLANS_ERROR_EXCEEDS_MAX;
 	}

@@ -2,6 +2,7 @@
 #include "util/types.hpp"
 #include "Utilities/StrUtil.h"
 #include "rpcn_client.h"
+#include <string_view>
 
 #ifdef _WIN32
 #include <WS2tcpip.h>
@@ -100,7 +101,7 @@ namespace np
 		// 	return SCE_NP_UTIL_ERROR_INVALID_NP_ID;
 		// }
 
-		if (strncmp(npid_1.handle.data, npid_2.handle.data, 16) == 0) // || id1->unk1[0] != id2->unk1[0])
+		if (std::string_view(npid_1.handle.data) == npid_2.handle.data) // || id1->unk1[0] != id2->unk1[0])
 		{
 			return true;
 		}

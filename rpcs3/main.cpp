@@ -19,6 +19,7 @@
 #include <QMessageBox>
 #include <QMetaEnum>
 #include <QStandardPaths>
+#include <string_view>
 
 #include "rpcs3qt/gui_application.h"
 #include "rpcs3qt/fatal_error_dialog.h"
@@ -671,7 +672,7 @@ int main(int argc, char** argv)
 		os.text = utils::get_OS_version_string();
 
 		// Write Qt version
-		logs::stored_message qt{(strcmp(QT_VERSION_STR, qVersion()) != 0) ? sys_log.error : sys_log.notice};
+		logs::stored_message qt{(std::string_view(QT_VERSION_STR) != qVersion()) ? sys_log.error : sys_log.notice};
 		qt.text = fmt::format("Qt version: Compiled against Qt %s | Run-time uses Qt %s", QT_VERSION_STR, qVersion());
 
 		// Write current time

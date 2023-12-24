@@ -16,6 +16,7 @@
 #include "Emu/RSX/Overlays/overlay_message.h"
 #include "Emu/Cell/lv2/sys_net/network_context.h"
 #include "Emu/Cell/lv2/sys_net/sys_net_helpers.h"
+#include <string_view>
 
 #ifdef _WIN32
 #include <winsock2.h>
@@ -1224,7 +1225,7 @@ namespace np
 							continue;
 						}
 						const auto& msg = opt_msg.value();
-						if (strncmp(msg->second.commId.data, basic_handler.context.data, sizeof(basic_handler.context.data) - 1) == 0)
+						if (std::string_view(msg->second.commId.data) == basic_handler.context.data)
 						{
 							u32 event;
 							switch (msg->second.mainType)

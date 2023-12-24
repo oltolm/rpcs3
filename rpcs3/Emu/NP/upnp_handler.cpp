@@ -3,6 +3,7 @@
 #include "util/logs.hpp"
 
 #include <miniwget.h>
+#include <string_view>
 #include <upnpcommands.h>
 
 LOG_CHANNEL(upnp_log, "UPNP");
@@ -77,7 +78,7 @@ void upnp_handler::upnp_enable()
 	const UPNPDev* dev = devlist;
 	for (; dev; dev = dev->pNext)
 	{
-		if (strstr(dev->st, "InternetGatewayDevice"))
+		if (std::string_view(dev->st).find("InternetGatewayDevice") != std::string_view::npos)
 			break;
 	}
 

@@ -27,7 +27,6 @@
 #include <span>
 #include <set>
 #include <algorithm>
-#include <shared_mutex>
 #include "util/asm.hpp"
 
 LOG_CHANNEL(ppu_loader);
@@ -682,7 +681,7 @@ extern bool ppu_register_library_lock(std::string_view libname, bool lock_lib)
 }
 
 // Load and register exports; return special exports found (nameless module)
-static auto ppu_load_exports(const ppu_module& _module, ppu_linkage_info* link, u32 exports_start, u32 exports_end, bool for_observing_callbacks = false, std::vector<u32>* funcs = nullptr, std::basic_string<bool>* loaded_flags = nullptr)
+static auto ppu_load_exports(const ppu_module& _module, ppu_linkage_info* link, u32 exports_start, u32 exports_end, bool for_observing_callbacks = false, std::vector<u32>* funcs = nullptr, std::basic_string<char>* loaded_flags = nullptr)
 {
 	std::unordered_map<u32, u32> result;
 
@@ -983,7 +982,7 @@ static auto ppu_load_imports(const ppu_module& _module, std::vector<ppu_reloc>& 
 }
 
 // For _sys_prx_register_module
-void ppu_manual_load_imports_exports(u32 imports_start, u32 imports_size, u32 exports_start, u32 exports_size, std::basic_string<bool>& loaded_flags)
+void ppu_manual_load_imports_exports(u32 imports_start, u32 imports_size, u32 exports_start, u32 exports_size, std::basic_string<char>& loaded_flags)
 {
 	auto& _main = g_fxo->get<main_ppu_module>();
 	auto& link = g_fxo->get<ppu_linkage_info>();
@@ -1287,7 +1286,7 @@ static void ppu_check_patch_spu_images(const ppu_module& mod, const ppu_segment&
 		std::string name;
 		std::string dump;
 
-		std::basic_string<u32> applied;
+		std::basic_string<char32_t> applied;
 
 		// Executable hash
 		sha1_context sha2;
@@ -1828,7 +1827,7 @@ std::shared_ptr<lv2_prx> ppu_load_prx(const ppu_prx_object& elf, bool virtual_lo
 		liblv2_end = prx->segs[0].addr + prx->segs[0].size;
 	}
 
-	std::basic_string<u32> applied;
+	std::basic_string<char32_t> applied;
 
 	for (usz i = Emu.DeserialManager() ? prx->segs.size() : 0; i < prx->segs.size(); i++)
 	{
@@ -1848,7 +1847,7 @@ std::shared_ptr<lv2_prx> ppu_load_prx(const ppu_prx_object& elf, bool virtual_lo
 		}
 
 		// Rebase patch offsets
-		std::for_each(_applied.begin(), _applied.end(), [&](u32& res) { if (res != umax) res += seg.addr; });
+		std::for_each(_applied.begin(), _applied.end(), [&](char32_t& res) { if (res != umax) res += seg.addr; });
 
 		applied += _applied;
 

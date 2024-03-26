@@ -5,9 +5,7 @@
 #include "lz.h"
 #include "ec.h"
 
-#include "Utilities/mutex.h"
 #include "Emu/system_utils.hpp"
-#include <cmath>
 
 #include "util/asm.hpp"
 
@@ -616,7 +614,7 @@ bool validate_npd_hashes(std::string_view file_name, const u8* klicensee, NPD_HE
 
 	for (usz i = std::basic_string_view<u8>(buf.get() + 0x30, file_name.size()).find_last_of('.'); i < buf_len; i++)
 	{
-		const u8 c = static_cast<u8>(buf[i]);
+		const u8 c = buf[i];
 		buf_upper[i] = std::toupper(c);
 		buf_lower[i] = std::tolower(c);
 	}

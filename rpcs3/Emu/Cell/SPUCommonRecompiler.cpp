@@ -543,7 +543,7 @@ extern void utilize_spu_data_segment(u32 vaddr, const void* ls_data_vaddr, u32 s
 		return;
 	}
 
-	std::basic_string<u32> data(size / 4, 0);
+	std::basic_string<char32_t> data(size / 4, 0);
 	std::memcpy(data.data(), ls_data_vaddr, size);
 
 	spu_cache::precompile_data_t obj{vaddr, std::move(data)};
@@ -915,7 +915,7 @@ void spu_cache::initialize(bool build_existing_cache)
 			u32 next_func = 0;
 			u32 sec_addr = umax;
 			u32 sec_idx = 0;
-			std::basic_string_view<u32> inst_data;
+			std::basic_string_view<char32_t> inst_data;
 
 			// Try to get the data this index points to
 			for (auto& sec : data_list)
@@ -965,7 +965,7 @@ void spu_cache::initialize(bool build_existing_cache)
 
 			u32 block_addr = func_addr;
 
-			std::map<u32, std::basic_string<u32>> targets;
+			std::map<u32, std::basic_string<char32_t>> targets;
 
 			// Call analyser
 			spu_program func2 = compiler->analyse(ls.data(), block_addr, &targets);
@@ -1241,8 +1241,8 @@ bool spu_program::operator<(const spu_program& rhs) const noexcept
 	const u32 rhs_offs = (rhs.entry_point - rhs.lower_bound) / 4;
 
 	// Select range for comparison
-	std::basic_string_view<u32> lhs_data(data.data() + lhs_offs, data.size() - lhs_offs);
-	std::basic_string_view<u32> rhs_data(rhs.data.data() + rhs_offs, rhs.data.size() - rhs_offs);
+	std::basic_string_view<char32_t> lhs_data(reinterpret_cast<const char32_t*>(data.data()) + lhs_offs, data.size() - lhs_offs);
+	std::basic_string_view<char32_t> rhs_data(reinterpret_cast<const char32_t*>(rhs.data.data()) + rhs_offs, rhs.data.size() - rhs_offs);
 	const auto cmp0 = lhs_data.compare(rhs_data);
 
 	if (cmp0 < 0)
@@ -1251,8 +1251,8 @@ bool spu_program::operator<(const spu_program& rhs) const noexcept
 		return false;
 
 	// Compare from address 0 to the point before the entry point (TODO: undesirable)
-	lhs_data = {data.data(), lhs_offs};
-	rhs_data = {rhs.data.data(), rhs_offs};
+	lhs_data = {reinterpret_cast<const char32_t*>(data.data()), lhs_offs};
+	rhs_data = {reinterpret_cast<const char32_t*>(rhs.data.data()), rhs_offs};
 	const auto cmp1 = lhs_data.compare(rhs_data);
 
 	if (cmp1 < 0)
@@ -1319,7 +1319,7 @@ spu_item* spu_runtime::add_empty(spu_program&& data)
 spu_function_t spu_runtime::rebuild_ubertrampoline(u32 id_inst)
 {
 	// Prepare sorted list
-	static thread_local std::vector<std::pair<std::basic_string_view<u32>, spu_function_t>> m_flat_list;
+	static thread_local std::vector<std::pair<std::basic_string_view<char32_t>, spu_function_t>> m_flat_list;
 
 	// Remember top position
 	auto stuff_it = ::at32(m_stuff, id_inst >> 12).begin();
@@ -1336,7 +1336,7 @@ spu_function_t spu_runtime::rebuild_ubertrampoline(u32 id_inst)
 		{
 			if (const auto ptr = it->compiled.load())
 			{
-				std::basic_string_view<u32> range{it->data.data.data(), it->data.data.size()};
+				std::basic_string_view<char32_t> range{reinterpret_cast<const char32_t*>(it->data.data.data()), it->data.data.size()};
 				range.remove_prefix((it->data.entry_point - it->data.lower_bound) / 4);
 				m_flat_list.emplace_back(range, ptr);
 			}
@@ -1540,8 +1540,8 @@ spu_function_t spu_runtime::rebuild_ubertrampoline(u32 id_inst)
 					// Resort subrange starting from the new level
 					std::stable_sort(w.beg, w.end, [&](const auto& a, const auto& b)
 					{
-						std::basic_string_view<u32> lhs = a.first;
-						std::basic_string_view<u32> rhs = b.first;
+						std::basic_string_view<char32_t> lhs = a.first;
+						std::basic_string_view<char32_t> rhs = b.first;
 
 						lhs.remove_prefix(w.level);
 						rhs.remove_prefix(w.level);
@@ -1908,7 +1908,7 @@ spu_function_t spu_runtime::find(const u32* ls, u32 addr) const
 	{
 		if (const auto ptr = item.compiled.load())
 		{
-			std::basic_string_view<u32> range{item.data.data.data(), item.data.data.size()};
+			std::basic_string_view<char32_t> range{reinterpret_cast<const char32_t*>(item.data.data.data()), item.data.data.size()};
 			range.remove_prefix((item.data.entry_point - item.data.lower_bound) / 4);
 
 			if (addr / 4 + range.size() > 0x10000)
@@ -1916,7 +1916,7 @@ spu_function_t spu_runtime::find(const u32* ls, u32 addr) const
 				continue;
 			}
 
-			if (range.compare(0, range.size(), ls + addr / 4, range.size()) == 0)
+			if (range.compare(0, range.size(), reinterpret_cast<const char32_t*>(ls) + addr / 4, range.size()) == 0)
 			{
 				return ptr;
 			}
@@ -2818,7 +2818,7 @@ struct block_reg_info
 	}
 };
 
-spu_program spu_recompiler_base::analyse(const be_t<u32>* ls, u32 entry_point, std::map<u32, std::basic_string<u32>>* out_target_list)
+spu_program spu_recompiler_base::analyse(const be_t<u32>* ls, u32 entry_point, std::map<u32, std::basic_string<char32_t>>* out_target_list)
 {
 	// Result: addr + raw instruction data
 	spu_program result;
@@ -3059,8 +3059,8 @@ spu_program spu_recompiler_base::analyse(const be_t<u32>* ls, u32 entry_point, s
 			else if (type == spu_itype::BI && g_cfg.core.spu_block_size != spu_block_size_type::safe && !op.d && !op.e && !sync)
 			{
 				// Analyse jump table (TODO)
-				std::basic_string<u32> jt_abs;
-				std::basic_string<u32> jt_rel;
+				std::basic_string<char32_t> jt_abs;
+				std::basic_string<char32_t> jt_rel;
 				const u32 start = pos + 4;
 				u64 dabs = 0;
 				u64 drel = 0;
@@ -3908,7 +3908,7 @@ spu_program spu_recompiler_base::analyse(const be_t<u32>* ls, u32 entry_point, s
 	{
 		const u32 addr = bb.first;
 
-		for (u32& pred : bb.second.preds)
+		for (char32_t& pred : bb.second.preds)
 		{
 			pred = std::prev(m_bbs.upper_bound(pred))->first;
 		}
@@ -4010,7 +4010,7 @@ spu_program spu_recompiler_base::analyse(const be_t<u32>* ls, u32 entry_point, s
 		workload.push_back(entry_point);
 		ensure(m_bbs.count(entry_point));
 
-		std::basic_string<u32> new_entries;
+		std::basic_string<char32_t> new_entries;
 
 		for (u32 wi = 0; wi < workload.size(); wi++)
 		{
@@ -5100,7 +5100,7 @@ spu_program spu_recompiler_base::analyse(const be_t<u32>* ls, u32 entry_point, s
 				u32 stackframe_pc = SPU_LS_SIZE;
 				usz entry_index = umax;
 
-				auto get_block_targets = [&](u32 pc) -> std::basic_string_view<u32>
+				auto get_block_targets = [&](u32 pc) -> std::basic_string_view<char32_t>
 				{
 					if (m_block_info[pc / 4] && m_bbs.count(pc))
 					{
@@ -7689,7 +7689,7 @@ std::array<reg_state_t, s_reg_max>& block_reg_info::evaluate_start_state(const s
 	if (!has_true_state)
 	{
 		std::array<reg_state_t, s_reg_max> temp;
-		std::basic_string<u32> been_there;
+		std::basic_string<char32_t> been_there;
 
 		struct iterator_info
 		{

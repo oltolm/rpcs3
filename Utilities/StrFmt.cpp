@@ -334,6 +334,12 @@ void fmt_class_string<uint>::format(std::string& out, u64 arg)
 }
 
 template <>
+void fmt_class_string<char32_t>::format(std::string& out, u64 arg)
+{
+	fmt::append(out, "%#x", static_cast<char32_t>(arg));
+}
+
+template <>
 void fmt_class_string<long>::format(std::string& out, u64 arg)
 {
 	fmt::append(out, "%#lx", static_cast<long>(arg));

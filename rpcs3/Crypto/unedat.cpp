@@ -5,11 +5,12 @@
 #include "lz.h"
 #include "ec.h"
 
-#include "Utilities/mutex.h"
 #include "Emu/system_utils.hpp"
-#include <cmath>
 
 #include "util/asm.hpp"
+#include <algorithm>
+#include <iterator>
+#include <span>
 
 LOG_CHANNEL(edat_log, "EDAT");
 
@@ -614,9 +615,11 @@ bool validate_npd_hashes(std::string_view file_name, const u8* klicensee, NPD_HE
 	std::memcpy(buf_lower.get(), buf.get(), buf_len);
 	std::memcpy(buf_upper.get(), buf.get(), buf_len);
 
-	for (usz i = std::basic_string_view<u8>(buf.get() + 0x30, file_name.size()).find_last_of('.'); i < buf_len; i++)
+	std::span<u8> tmp(buf.get() + 0x30, file_name.size());
+	u8 needle = '.';
+	for (usz i = std::distance(std::find_end(tmp.begin(), tmp.end(), &needle, &needle + 1), tmp.end()); i < buf_len; ++i)
 	{
-		const u8 c = static_cast<u8>(buf[i]);
+		const u8 c = buf[i];
 		buf_upper[i] = std::toupper(c);
 		buf_lower[i] = std::tolower(c);
 	}

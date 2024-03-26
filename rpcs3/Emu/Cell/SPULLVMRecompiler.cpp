@@ -13,10 +13,8 @@
 #include "SPUThread.h"
 #include "SPUAnalyser.h"
 #include "SPUInterpreter.h"
-#include "SPUDisAsm.h"
 #include <algorithm>
 #include <thread>
-#include <unordered_set>
 
 #include "util/v128.hpp"
 #include "util/simd.hpp"

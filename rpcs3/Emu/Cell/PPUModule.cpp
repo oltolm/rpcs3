@@ -27,7 +27,6 @@
 #include <span>
 #include <set>
 #include <algorithm>
-#include <shared_mutex>
 #include "util/asm.hpp"
 
 LOG_CHANNEL(ppu_loader);
@@ -683,7 +682,7 @@ extern bool ppu_register_library_lock(std::string_view libname, bool lock_lib)
 }
 
 // Load and register exports; return special exports found (nameless module)
-static auto ppu_load_exports(const ppu_module& _module, ppu_linkage_info* link, u32 exports_start, u32 exports_end, bool for_observing_callbacks = false, std::vector<u32>* funcs = nullptr, std::basic_string<bool>* loaded_flags = nullptr)
+static auto ppu_load_exports(const ppu_module& _module, ppu_linkage_info* link, u32 exports_start, u32 exports_end, bool for_observing_callbacks = false, std::vector<u32>* funcs = nullptr, std::basic_string<char>* loaded_flags = nullptr)
 {
 	std::unordered_map<u32, u32> result;
 
@@ -984,7 +983,7 @@ static auto ppu_load_imports(const ppu_module& _module, std::vector<ppu_reloc>& 
 }
 
 // For _sys_prx_register_module
-void ppu_manual_load_imports_exports(u32 imports_start, u32 imports_size, u32 exports_start, u32 exports_size, std::basic_string<bool>& loaded_flags)
+void ppu_manual_load_imports_exports(u32 imports_start, u32 imports_size, u32 exports_start, u32 exports_size, std::basic_string<char>& loaded_flags)
 {
 	auto& _main = g_fxo->get<main_ppu_module>();
 	auto& link = g_fxo->get<ppu_linkage_info>();
@@ -1289,7 +1288,7 @@ static void ppu_check_patch_spu_images(const ppu_module& mod, const ppu_segment&
 		std::string name;
 		std::string dump;
 
-		std::basic_string<u32> applied;
+		std::vector<u32> applied;
 
 		// Executable hash
 		sha1_context sha2;
@@ -1363,12 +1362,14 @@ static void ppu_check_patch_spu_images(const ppu_module& mod, const ppu_segment&
 			}
 
 			// Apply the patch
-			applied += g_fxo->get<patch_engine>().apply(hash, [&](u32 addr, u32 /*size*/) { return addr + elf_header + prog.p_offset; }, prog.p_filesz, prog.p_vaddr);
+			auto tmp = g_fxo->get<patch_engine>().apply(hash, [&](u32 addr, u32 /*size*/) { return addr + elf_header + prog.p_offset; }, prog.p_filesz, prog.p_vaddr);
+			applied.insert(applied.end(), tmp.begin(), tmp.end());
 
 			if (!Emu.GetTitleID().empty())
 			{
 				// Alternative patch
-				applied += g_fxo->get<patch_engine>().apply(Emu.GetTitleID() + '-' + hash, [&](u32 addr, u32 /*size*/) { return addr + elf_header + prog.p_offset; }, prog.p_filesz, prog.p_vaddr);
+				auto tmp = g_fxo->get<patch_engine>().apply(Emu.GetTitleID() + '-' + hash, [&](u32 addr, u32 /*size*/) { return addr + elf_header + prog.p_offset; }, prog.p_filesz, prog.p_vaddr);
+				applied.insert(applied.end(), tmp.begin(), tmp.end());
 			}
 		}
 
@@ -1830,7 +1831,7 @@ std::shared_ptr<lv2_prx> ppu_load_prx(const ppu_prx_object& elf, bool virtual_lo
 		liblv2_end = prx->segs[0].addr + prx->segs[0].size;
 	}
 
-	std::basic_string<u32> applied;
+	std::vector<u32> applied;
 
 	for (usz i = Emu.DeserialManager() ? prx->segs.size() : 0; i < prx->segs.size(); i++)
 	{
@@ -1846,13 +1847,14 @@ std::shared_ptr<lv2_prx> ppu_load_prx(const ppu_prx_object& elf, bool virtual_lo
 		if (!Emu.GetTitleID().empty())
 		{
 			// Alternative patch
-			_applied += g_fxo->get<patch_engine>().apply(Emu.GetTitleID() + '-' + hash_seg, [&](u32 addr, u32 size) { return prx->get_ptr<u8>(addr + seg.addr, size); }, seg.size);
+			auto tmp = g_fxo->get<patch_engine>().apply(Emu.GetTitleID() + '-' + hash_seg, [&](u32 addr, u32 size) { return prx->get_ptr<u8>(addr + seg.addr, size); }, seg.size);
+			_applied.insert(_applied.end(), tmp.begin(), tmp.end());
 		}
 
 		// Rebase patch offsets
 		std::for_each(_applied.begin(), _applied.end(), [&](u32& res) { if (res != umax) res += seg.addr; });
 
-		applied += _applied;
+		applied.insert(applied.end(), _applied.begin(), _applied.end());
 
 		if (_applied.empty())
 		{
@@ -1877,10 +1879,11 @@ std::shared_ptr<lv2_prx> ppu_load_prx(const ppu_prx_object& elf, bool virtual_lo
 				// Find the first segment
 				if (prog.p_type == 0x1u /* LOAD */ && prog.p_memsz)
 				{
-					std::basic_string_view<uchar> elf_memory{prog.bin.data(), prog.bin.size()};
-					elf_memory.remove_prefix(end - prx->segs[0].addr);
+					std::span<const uchar> elf_memory{prog.bin.begin(), prog.bin.size()};
+					elf_memory = elf_memory.subspan(end - prx->segs[0].addr);
 
-					if (elf_memory != std::basic_string_view<uchar>{&prx->get_ref<uchar>(end), elf_memory.size()})
+					auto tmp = std::span<uchar>{&prx->get_ref<uchar>(end), elf_memory.size()};
+					if (!std::equal(elf_memory.begin(), elf_memory.end(), tmp.begin(), tmp.end()))
 					{
 						// There are changes, disable analysis optimization
 						ppu_loader.notice("Disabling analysis optimization due to memory changes from original file");
@@ -2203,7 +2206,8 @@ bool ppu_load_exec(const ppu_exec_object& elf, bool virtual_load, const std::str
 	if (!ar && !Emu.GetTitleID().empty())
 	{
 		// Alternative patch
-		applied += g_fxo->get<patch_engine>().apply(Emu.GetTitleID() + '-' + hash, [&](u32 addr, u32 size) { return _main.get_ptr<u8>(addr, size); });
+		auto tmp = g_fxo->get<patch_engine>().apply(Emu.GetTitleID() + '-' + hash, [&](u32 addr, u32 size) { return _main.get_ptr<u8>(addr, size); });
+		applied.insert(applied.end(), tmp.begin(), tmp.end());
 	}
 
 	if (!applied.empty() || ar)
@@ -2216,10 +2220,11 @@ bool ppu_load_exec(const ppu_exec_object& elf, bool virtual_load, const std::str
 				// Find the first segment
 				if (prog.p_type == 0x1u /* LOAD */ && prog.p_memsz)
 				{
-					std::basic_string_view<uchar> elf_memory{prog.bin.data(), prog.bin.size()};
-					elf_memory.remove_prefix(end - _main.segs[0].addr);
+					std::span<const uchar> elf_memory{prog.bin.begin(), prog.bin.size()};
+					elf_memory = elf_memory.subspan(end - _main.segs[0].addr);
 
-					if (elf_memory != std::basic_string_view<uchar>{&_main.get_ref<u8>(end), elf_memory.size()})
+					auto tmp = std::span<uchar>{&_main.get_ref<u8>(end), elf_memory.size()};
+					if (!std::equal(elf_memory.begin(), elf_memory.end(), tmp.begin(), tmp.end()))
 					{
 						// There are changes, disable analysis optimization
 						ppu_loader.notice("Disabling analysis optimization due to memory changes from original file");
@@ -2886,7 +2891,8 @@ std::pair<std::shared_ptr<lv2_overlay>, CellError> ppu_load_overlay(const ppu_ex
 	if (!Emu.DeserialManager() && !Emu.GetTitleID().empty())
 	{
 		// Alternative patch
-		applied += g_fxo->get<patch_engine>().apply(Emu.GetTitleID() + '-' + hash, [ovlm](u32 addr, u32 size) { return ovlm->get_ptr<u8>(addr, size); });
+		const auto& tmp = g_fxo->get<patch_engine>().apply(Emu.GetTitleID() + '-' + hash, [ovlm](u32 addr, u32 size) { return ovlm->get_ptr<u8>(addr, size); });
+		applied.insert(applied.end(), tmp.begin(), tmp.end());
 	}
 
 	if (!applied.empty() || ar)
@@ -2899,10 +2905,11 @@ std::pair<std::shared_ptr<lv2_overlay>, CellError> ppu_load_overlay(const ppu_ex
 				// Find the first segment
 				if (prog.p_type == 0x1u /* LOAD */ && prog.p_memsz)
 				{
-					std::basic_string_view<uchar> elf_memory{prog.bin.data(), prog.bin.size()};
-					elf_memory.remove_prefix(end - ovlm->segs[0].addr);
+					std::span<const uchar> elf_memory{prog.bin.begin(), prog.bin.size()};
+					elf_memory = elf_memory.subspan(end - ovlm->segs[0].addr);
 
-					if (elf_memory != std::basic_string_view<uchar>{&ovlm->get_ref<u8>(end), elf_memory.size()})
+					auto tmp = std::span<uchar>{&ovlm->get_ref<u8>(end), elf_memory.size()};
+					if (!std::equal(elf_memory.begin(), elf_memory.end(), tmp.begin(), tmp.end()))
 					{
 						// There are changes, disable analysis optimization
 						ppu_loader.notice("Disabling analysis optimization due to memory changes from original file");

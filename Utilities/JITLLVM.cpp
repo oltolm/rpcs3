@@ -673,7 +673,7 @@ bool jit_compiler::add(const std::string& path)
 
 	if (auto object_file = llvm::object::ObjectFile::createObjectFile(*cache))
 	{
-		m_engine->addObjectFile(llvm::object::OwningBinary<llvm::object::ObjectFile>(std::move(*object_file), std::move(cache)));
+		m_engine->addObjectFile(llvm::object::OwningBinary(std::move(*object_file), std::move(cache)));
 		jit_log.trace("ObjectCache: Successfully added %s", path);
 		return true;
 	}

@@ -195,7 +195,8 @@ void sys_spu_image::deploy(u8* loc, std::span<const sys_spu_segment> segs, bool 
 	if (!Emu.GetTitleID().empty())
 	{
 		// Alternative patch
-		applied += g_fxo->get<patch_engine>().apply(Emu.GetTitleID() + '-' + hash, mem_translate);
+		auto tmp = g_fxo->get<patch_engine>().apply(Emu.GetTitleID() + '-' + hash, mem_translate);
+		applied.insert(applied.end(), tmp.begin(), tmp.end());
 	}
 
 	(is_verbose ? spu_log.notice : sys_spu.trace)("Loaded SPU image: %s (<- %u)%s", hash, applied.size(), dump);

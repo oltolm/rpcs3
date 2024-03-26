@@ -13,13 +13,10 @@
 #include "SPUThread.h"
 #include "SPUAnalyser.h"
 #include "SPUInterpreter.h"
-#include "SPUDisAsm.h"
 #include <algorithm>
 #include <thread>
-#include <unordered_set>
 
 #include "util/v128.hpp"
-#include "util/simd.hpp"
 #include "util/sysinfo.hpp"
 
 const extern spu_decoder<spu_itype> g_spu_itype;

@@ -108,6 +108,7 @@ add_library(rpcs3_ui STATIC
     vfs_dialog_usb_input.cpp
     vfs_dialog_usb_tab.cpp
     welcome_dialog.cpp
+    ps_move_tracker_dialog.cpp
 
     about_dialog.ui
     camera_settings_dialog.ui
@@ -121,6 +122,7 @@ add_library(rpcs3_ui STATIC
     settings_dialog.ui
     shortcut_dialog.ui
     welcome_dialog.ui
+    ps_move_tracker_dialog.ui
 
     "../resources.qrc"
 )

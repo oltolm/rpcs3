@@ -1,5 +1,8 @@
 #pragma once
 
+#include "Emu/Cell/Modules/cellGem.h"
+#include "Utilities/Thread.h"
+
 struct ps_move_info
 {
 	bool valid = false;

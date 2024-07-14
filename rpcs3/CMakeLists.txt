@@ -90,6 +90,9 @@ target_sources(rpcs3
     Input/sdl_pad_handler.cpp
     Input/skateboard_pad_handler.cpp
     Input/xinput_pad_handler.cpp
+    Input/ps_move_config.cpp
+    Input/ps_move_handler.cpp
+    Input/ps_move_tracker.cpp
 )
 
 gen_git_version(${CMAKE_CURRENT_SOURCE_DIR})
@@ -97,6 +100,17 @@ set_target_properties(rpcs3
     PROPERTIES
         AUTOMOC ON
         AUTOUIC ON)
+
+if(MSVC)
+    target_link_libraries(rpcs3 PRIVATE 3rdparty::opencv)
+    set_source_files_properties(Input/ps_move_tracker.cpp PROPERTIES COMPILE_DEFINITIONS HAVE_OPENCV)
+else()
+    find_package(OpenCV COMPONENTS imgproc)
+    if(OpenCV_FOUND)
+        target_link_libraries(rpcs3 PRIVATE ${OpenCV_LIBS})
+        set_source_files_properties(Input/ps_move_tracker.cpp PROPERTIES COMPILE_DEFINITIONS HAVE_OPENCV)
+    endif()
+endif()
 
 target_link_libraries(rpcs3
     PRIVATE

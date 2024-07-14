@@ -6,6 +6,9 @@
 	constexpr bool g_ps_move_tracking_supported = false;
 #endif
 
+#include "Emu/Cell/Modules/cellGem.h"
+#include "Utilities/Thread.h"
+
 struct ps_move_info
 {
 	bool valid = false;     // The tracking result
@@ -31,7 +34,7 @@ public:
 	void convert_image(s32 output_format);
 	void process_hues();
 	void process_contours(ps_move_info& info, u32 index);
-	
+
 	void set_active(u32 index, bool active);
 	void set_hue(u32 index, u16 hue);
 	void set_hue_threshold(u32 index, u16 threshold);

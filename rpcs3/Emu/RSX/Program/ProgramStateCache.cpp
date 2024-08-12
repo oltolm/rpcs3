@@ -583,14 +583,14 @@ bool fragment_program_compare::operator()(const RSXFragmentProgram& binary1, con
 
 namespace rsx
 {
-#if defined(ARCH_X64) || defined(ARCH_ARM64)
-	static inline void write_fragment_constants_to_buffer_sse2(const std::span<f32>& buffer, const RSXFragmentProgram& rsx_prog, const std::vector<usz>& offsets_cache, bool sanitize)
+	void write_fragment_constants_to_buffer(const std::span<f32>& buffer, const RSXFragmentProgram& rsx_prog, const std::vector<usz>& offsets_cache, bool sanitize)
 	{
 		f32* dst = buffer.data();
 		for (usz offset_in_fragment_program : offsets_cache)
 		{
 			char* data = static_cast<char*>(rsx_prog.get_data()) + offset_in_fragment_program;
 
+#if defined(ARCH_X64) || defined(ARCH_ARM64)
 			const __m128i vector = _mm_loadu_si128(reinterpret_cast<__m128i*>(data));
 			const __m128i shuffled_vector = _mm_or_si128(_mm_slli_epi16(vector, 8), _mm_srli_epi16(vector, 8));
 
@@ -606,19 +606,7 @@ namespace rsx
 			{
 				_mm_stream_si128(utils::bless<__m128i>(dst), shuffled_vector);
 			}
-
-			dst += 4;
-		}
-	}
 #else
-	static inline void write_fragment_constants_to_buffer_fallback(const std::span<f32>& buffer, const RSXFragmentProgram& rsx_prog, const std::vector<usz>& offsets_cache, bool sanitize)
-	{
-		f32* dst = buffer.data();
-
-		for (usz offset_in_fragment_program : offsets_cache)
-		{
-			char* data = static_cast<char*>(rsx_prog.get_data()) + offset_in_fragment_program;
-
 			for (u32 i = 0; i < 4; i++)
 			{
 				const u32 value = reinterpret_cast<u32*>(data)[i];
@@ -633,18 +621,9 @@ namespace rsx
 					dst[i] = std::bit_cast<f32>(shuffled);
 				}
 			}
+#endif
 
 			dst += 4;
 		}
-	}
-#endif
-
-	void write_fragment_constants_to_buffer(const std::span<f32>& buffer, const RSXFragmentProgram& rsx_prog, const std::vector<usz>& offsets_cache, bool sanitize)
-	{
-#if defined(ARCH_X64) || defined(ARCH_ARM64)
-		write_fragment_constants_to_buffer_sse2(buffer, rsx_prog, offsets_cache, sanitize);
-#else
-		write_fragment_constants_to_buffer_fallback(buffer, rsx_prog, offsets_cache, sanitize);
-#endif
 	}
 }

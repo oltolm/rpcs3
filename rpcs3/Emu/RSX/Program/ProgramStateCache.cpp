@@ -42,11 +42,11 @@ AVX512_ICL_FUNC usz get_vertex_program_ucode_hash_512(const RSXVertexProgram &pr
 	const __m512i lowerMask = _mm512_loadu_si512(instMask512);
 	const __m128i upper128 = _mm_loadu_si128(instMask128 + 4);
 	const __m512i upperMask = _mm512_zextsi128_si512(upper128);
-	
+
 	__m512i maskIndex = _mm512_setzero_si512();
 	const __m512i negativeOnes = _mm512_set1_epi64(-1);
 
-	// Special masks to test against bitset 
+	// Special masks to test against bitset
 	const __m512i testMask0 = _mm512_set_epi64(
 	0x0808080808080808,
 	0x0808080808080808,
@@ -459,11 +459,11 @@ AVX512_ICL_FUNC bool vertex_program_compare_512(const RSXVertexProgram &binary1,
 		const __m512i lowerMask = _mm512_loadu_si512(instMask512);
 		const __m128i upper128 = _mm_loadu_si128(instMask128 + 4);
 		const __m512i upperMask = _mm512_zextsi128_si512(upper128);
-		
+
 		__m512i maskIndex = _mm512_setzero_si512();
 		const __m512i negativeOnes = _mm512_set1_epi64(-1);
 
-		// Special masks to test against bitset 
+		// Special masks to test against bitset
 		const __m512i testMask0 = _mm512_set_epi64(
 		0x0808080808080808,
 		0x0808080808080808,
@@ -765,7 +765,7 @@ bool fragment_program_compare::operator()(const RSXFragmentProgram& binary1, con
 		if (fragment_program_utils::is_any_src_constant(inst1))
 			instIndex++;
 	}
-	
+
 	return true;
 }
 
@@ -781,14 +781,14 @@ bool fragment_program_compare::compare_properties(const RSXFragmentProgram& bina
 
 namespace rsx
 {
-#if defined(ARCH_X64) || defined(ARCH_ARM64)
-	static inline void write_fragment_constants_to_buffer_sse2(const std::span<f32>& buffer, const RSXFragmentProgram& rsx_prog, const std::vector<usz>& offsets_cache, bool sanitize)
+	void write_fragment_constants_to_buffer(const std::span<f32>& buffer, const RSXFragmentProgram& rsx_prog, const std::vector<usz>& offsets_cache, bool sanitize)
 	{
 		f32* dst = buffer.data();
 		for (usz offset_in_fragment_program : offsets_cache)
 		{
 			const char* data = static_cast<const char*>(rsx_prog.get_data()) + offset_in_fragment_program;
 
+#if defined(ARCH_X64) || defined(ARCH_ARM64)
 			const __m128i vector = _mm_loadu_si128(reinterpret_cast<const __m128i*>(data));
 			const __m128i shuffled_vector = _mm_or_si128(_mm_slli_epi16(vector, 8), _mm_srli_epi16(vector, 8));
 
@@ -804,10 +804,6 @@ namespace rsx
 			{
 				_mm_stream_si128(utils::bless<__m128i>(dst), shuffled_vector);
 			}
-
-			dst += 4;
-		}
-	}
 #else
 	static inline void write_fragment_constants_to_buffer_fallback(const std::span<f32>& buffer, const RSXFragmentProgram& rsx_prog, const std::vector<usz>& offsets_cache, bool sanitize)
 	{
@@ -831,19 +827,10 @@ namespace rsx
 					dst[i] = std::bit_cast<f32>(shuffled);
 				}
 			}
+#endif
 
 			dst += 4;
 		}
-	}
-#endif
-
-	void write_fragment_constants_to_buffer(const std::span<f32>& buffer, const RSXFragmentProgram& rsx_prog, const std::vector<usz>& offsets_cache, bool sanitize)
-	{
-#if defined(ARCH_X64) || defined(ARCH_ARM64)
-		write_fragment_constants_to_buffer_sse2(buffer, rsx_prog, offsets_cache, sanitize);
-#else
-		write_fragment_constants_to_buffer_fallback(buffer, rsx_prog, offsets_cache, sanitize);
-#endif
 	}
 
 	void program_cache_hint_t::invalidate(u32 flags)

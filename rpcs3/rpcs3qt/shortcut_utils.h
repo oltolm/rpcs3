@@ -1,5 +1,7 @@
 #pragma once
 
+#include <string>
+
 namespace gui::utils
 {
 	enum class shortcut_location

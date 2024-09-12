@@ -26,6 +26,7 @@
 #include <QFile>
 #include <QImageWriter>
 #include <QPixmap>
+#include <QScopeGuard>
 #include <QStandardPaths>
 
 LOG_CHANNEL(sys_log, "SYS");
@@ -166,16 +167,14 @@ namespace gui::utils
 		Microsoft::WRL::ComPtr<IShellLink> pShellLink;
 		Microsoft::WRL::ComPtr<IPersistFile> pPersistFile;
 
-		const auto cleanup = [&](bool return_value, const std::string& fail_reason) -> bool
-		{
-			if (!return_value) sys_log.error("Failed to create shortcut: %s", fail_reason);
-			CoUninitialize();
-			return return_value;
-		};
+		auto cleanup = qScopeGuard([&]() { CoUninitialize(); });
 
 		res = CoCreateInstance(__uuidof(ShellLink), NULL, CLSCTX_INPROC_SERVER, IID_PPV_ARGS(&pShellLink));
 		if (FAILED(res))
-			return cleanup(false, "CoCreateInstance failed");
+		{
+			sys_log.error("Failed to create shortcut: CoCreateInstance failed");
+			return false;
+		}
 
 		const std::string working_dir{ fs::get_executable_dir() };
 		const std::string rpcs3_path{ working_dir + "rpcs3.exe" };
@@ -183,45 +182,66 @@ namespace gui::utils
 		const std::wstring w_target_file = utf8_to_wchar(rpcs3_path);
 		res = pShellLink->SetPath(w_target_file.c_str());
 		if (FAILED(res))
-			return cleanup(false, fmt::format("SetPath failed (%s)", str_error(res)));
+		{
+			sys_log.error("Failed to create shortcut: SetPath failed (%s)", str_error(res));
+			return false;
+		}
 
 		const std::wstring w_working_dir = utf8_to_wchar(working_dir);
 		res = pShellLink->SetWorkingDirectory(w_working_dir.c_str());
 		if (FAILED(res))
-			return cleanup(false, fmt::format("SetWorkingDirectory failed (%s)", str_error(res)));
+		{
+			sys_log.error("Failed to create shortcut: SetWorkingDirectory failed (%s)", str_error(res));
+			return false;
+		}
 
 		if (!target_cli_args.empty())
 		{
 			const std::wstring w_target_cli_args = utf8_to_wchar(target_cli_args);
 			res = pShellLink->SetArguments(w_target_cli_args.c_str());
 			if (FAILED(res))
-				return cleanup(false, fmt::format("SetArguments failed (%s)", str_error(res)));
+			{
+				sys_log.error("Failed to create shortcut: SetArguments failed (%s)", str_error(res));
+				return false;
+			}
 		}
 
 		if (!description.empty())
 		{
-			const std::wstring w_descpription = utf8_to_wchar(description);
-			res = pShellLink->SetDescription(w_descpription.c_str());
+			const std::wstring w_description = utf8_to_wchar(description);
+			res = pShellLink->SetDescription(w_description.c_str());
 			if (FAILED(res))
-				return cleanup(false, fmt::format("SetDescription failed (%s)", str_error(res)));
+			{
+				sys_log.error("Failed to create shortcut: SetDescription failed (%s)", str_error(res));
+				return false;
+			}
 		}
 
 		if (!src_icon_path.empty() && !target_icon_dir.empty())
 		{
 			std::string target_icon_path;
 			if (!create_square_shortcut_icon_file(path, src_icon_path, target_icon_dir, target_icon_path, 512))
-				return cleanup(false, ".ico creation failed");
+			{
+				sys_log.error("Failed to create shortcut: .ico creation failed");
+				return false;
+			}
 
 			const std::wstring w_icon_path = utf8_to_wchar(target_icon_path);
 			res = pShellLink->SetIconLocation(w_icon_path.c_str(), 0);
 			if (FAILED(res))
-				return cleanup(false, fmt::format("SetIconLocation failed (%s)", str_error(res)));
+			{
+				sys_log.error("Failed to create shortcut: SetIconLocation failed (%s)", str_error(res));
+				return false;
+			}
 		}
 
 		// Use the IPersistFile object to save the shell link
 		res = pShellLink.As(&pPersistFile);
 		if (FAILED(res))
-			return cleanup(false, fmt::format("QueryInterface failed (%s)", str_error(res)));
+		{
+			sys_log.error("Failed to create shortcut: QueryInterface failed (%s)", str_error(res));
+			return false;
+		}
 
 		// Save shortcut
 		const std::wstring w_link_file = utf8_to_wchar(link_path);
@@ -230,15 +250,16 @@ namespace gui::utils
 		{
 			if (location == shortcut_location::desktop)
 			{
-				return cleanup(false, fmt::format("Saving file to desktop failed (%s)", str_error(res)));
+				sys_log.error("Failed to create shortcut: Saving file to desktop failed (%s)", str_error(res));
 			}
 			else
 			{
-				return cleanup(false, fmt::format("Saving file to start menu failed (%s)", str_error(res)));
+				sys_log.error("Failed to create shortcut: Saving file to start menu failed (%s)", str_error(res));
 			}
+			return false;
 		}
 
-		return cleanup(true, {});
+		return true;
 
 #elif defined(__APPLE__)
 		fmt::append(link_path, "/%s.app", simple_name);

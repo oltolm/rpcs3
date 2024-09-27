@@ -1,8 +1,10 @@
 #pragma once
 
+#include "Emu/Cell/ErrorCodes.h"
 #include "cellPamf.h" // CellCodecTimeStamp
 #include "../lv2/sys_mutex.h"
 #include "../lv2/sys_cond.h"
+#include "cellPamf.h"
 
 // Error Codes
 enum CellAdecError : u32

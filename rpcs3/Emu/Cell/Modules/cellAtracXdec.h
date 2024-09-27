@@ -20,9 +20,11 @@ constexpr int averror_eof = AVERROR_EOF; // Workaround for old-style-cast error
 #pragma GCC diagnostic pop
 #endif
 
+#include "Emu/Cell/ErrorCodes.h"
 #include "Utilities/cond.h"
-#include "cellPamf.h"
 #include "cellAdec.h"
+#include "util/types.hpp"
+#include "Utilities/mutex.h"
 
 enum CellAtracXdecError : u32
 {

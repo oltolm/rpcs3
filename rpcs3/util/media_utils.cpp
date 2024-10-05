@@ -346,7 +346,9 @@ namespace utils
 	{
 		if (!codec) return false;
 
-		for (const AVSampleFormat* p = codec->sample_fmts; p && *p != AV_SAMPLE_FMT_NONE; p++)
+		const enum AVSampleFormat* out_configs;
+		avcodec_get_supported_config(nullptr, codec, AV_CODEC_CONFIG_SAMPLE_FORMAT, 0, reinterpret_cast<const void**>(&out_configs), nullptr);
+		for (const AVSampleFormat* p = out_configs; p && *p != AV_SAMPLE_FMT_NONE; p++)
 		{
 			if (*p == sample_fmt)
 			{
@@ -359,11 +361,13 @@ namespace utils
 	// just pick the highest supported samplerate
 	static int select_sample_rate(const AVCodec* codec)
 	{
-		if (!codec || !codec->supported_samplerates)
+		const int* out_configs;
+		avcodec_get_supported_config(nullptr, codec, AV_CODEC_CONFIG_SAMPLE_RATE, 0, reinterpret_cast<const void**>(&out_configs), nullptr);
+		if (!codec || !out_configs)
 			return 48000;
 
 		int best_samplerate = 0;
-		for (const int* samplerate = codec->supported_samplerates; samplerate && *samplerate != 0; samplerate++)
+		for (const int* samplerate = out_configs; samplerate && *samplerate != 0; samplerate++)
 		{
 			if (!best_samplerate || abs(48000 - *samplerate) < abs(48000 - best_samplerate))
 			{
@@ -399,7 +403,9 @@ namespace utils
 		const AVChannelLayout preferred_ch_layout = get_preferred_channel_layout(channels);
 		const AVChannelLayout* found_ch_layout = nullptr;
 
-		for (const AVChannelLayout* ch_layout = codec->ch_layouts;
+		const AVChannelLayout* out_configs;
+		avcodec_get_supported_config(nullptr, codec, AV_CODEC_CONFIG_CHANNEL_LAYOUT, 0, reinterpret_cast<const void**>(&out_configs), nullptr);
+		for (const AVChannelLayout* ch_layout = out_configs;
 			 ch_layout && memcmp(ch_layout, &empty_ch_layout, sizeof(AVChannelLayout)) != 0;
 			 ch_layout++)
 		{

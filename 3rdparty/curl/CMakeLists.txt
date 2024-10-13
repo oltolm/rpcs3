@@ -26,7 +26,7 @@ else()
 	set(CURL_USE_LIBSSH2 OFF CACHE BOOL "Use libSSH2")
 	set(CURL_USE_LIBPSL OFF CACHE BOOL "Use libPSL")
 
-	set(SSL_ENABLED ON)
+	set(_ssl_enabled ON)
 	set(USE_WOLFSSL ON)
 	set(SHARE_LIB_OBJECT OFF)
 	set(CURL_DISABLE_TESTS ON)

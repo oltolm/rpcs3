@@ -19,9 +19,9 @@ AllowShortLoopsOnASingleLine: false
 AllowShortLambdasOnASingleLine: Empty
 Cpp11BracedListStyle: true
 IndentCaseLabels: false
-SortIncludes: false
+SortIncludes: Never
 ReflowComments: true
-AlignConsecutiveAssignments: false
+AlignConsecutiveAssignments: None
 AlignTrailingComments: true
 AlignAfterOpenBracket: DontAlign
 ConstructorInitializerAllOnOneLineOrOnePerLine: false

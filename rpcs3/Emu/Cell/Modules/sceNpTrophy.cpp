@@ -479,7 +479,7 @@ error_code sceNpTrophyCreateContext(vm::ptr<u32> context, vm::cptr<SceNpCommunic
 		return SCE_NP_TROPHY_ERROR_INVALID_NP_COMM_ID;
 	}
 
-	if (std::basic_string_view<u8>(&commSign_data.data[6], 6).find_first_not_of('\0') != umax)
+	if (std::string_view(reinterpret_cast<const char*>(&commSign_data.data[6]), 6).find_first_not_of('\0') != umax)
 	{
 		// 6 padding bytes - must be 0
 		return SCE_NP_TROPHY_ERROR_INVALID_NP_COMM_ID;

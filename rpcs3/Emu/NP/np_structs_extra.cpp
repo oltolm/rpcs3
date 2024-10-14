@@ -39,7 +39,7 @@ namespace extra_nps
 
 		if (ptr && size)
 		{
-			sceNp2.warning("Data: %s", std::basic_string_view<u8>{ptr.get_ptr(), size});
+			sceNp2.warning("Data: %s", std::string_view{reinterpret_cast<const char*>(ptr.get_ptr()), size});
 		}
 	}
 
@@ -57,7 +57,7 @@ namespace extra_nps
 
 	void print_SceNpMatching2PresenceOptionData(const SceNpMatching2PresenceOptionData* opt)
 	{
-		sceNp2.warning("Data: %s", std::basic_string_view<u8>{std::data(opt->data), std::size(opt->data)});
+		sceNp2.warning("Data: %s", std::string_view{reinterpret_cast<const char*>(std::data(opt->data)), std::size(opt->data)});
 	}
 
 	void print_range(const SceNpMatching2Range* range)

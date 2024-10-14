@@ -88,7 +88,7 @@ namespace fs
 	struct file_id
 	{
 		std::string type;
-		std::vector<u8> data;
+		std::vector<char> data;
 
 		explicit operator bool() const;
 		bool is_mirror_of(const file_id&) const;

@@ -293,7 +293,7 @@ namespace fs
 		struct id_view
 		{
 			std::string_view type_view;
-			std::basic_string_view<u8> data_view;
+			std::string_view data_view;
 		};
 
 		id_view _rhs{rhs.type, {rhs.data.data(), rhs.data.size()}};

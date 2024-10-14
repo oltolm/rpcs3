@@ -75,7 +75,7 @@ void fmt_class_string<psf::registry>::format(std::string& out, u64 arg)
 			continue;
 		}
 
-		fmt::append(out, "%s: %s\n", entry.first, std::basic_string_view<u8>(reinterpret_cast<const u8*>(entry.second.as_string().data()), entry.second.size()));
+		fmt::append(out, "%s: %s\n", entry.first, entry.second.as_string());
 	}
 }
 

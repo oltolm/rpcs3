@@ -753,7 +753,7 @@ void debugger_frame::keyPressEvent(QKeyEvent* event)
 			default: break;
 			}
 
-			if (const usz pos = std::basic_string_view<u32>(res.data(), 2).find_last_not_of(umax); pos != umax)
+			if (const usz pos = std::basic_string_view<char32_t>(reinterpret_cast<const char32_t*>(res.data()), 2).find_last_not_of(umax); pos != umax)
 				m_debugger_list->ShowAddress(res[pos] - std::max(row, 0) * 4, true);
 
 			return;

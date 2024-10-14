@@ -5,11 +5,10 @@
 #include "lz.h"
 #include "ec.h"
 
-#include "Utilities/mutex.h"
 #include "Emu/system_utils.hpp"
-#include <cmath>
 
 #include "util/asm.hpp"
+#include <algorithm>
 
 LOG_CHANNEL(edat_log, "EDAT");
 
@@ -603,9 +602,9 @@ bool validate_npd_hashes(std::string_view file_name, const u8* klicensee, NPD_HE
 
 	const usz buf_len = 0x30 + file_name.size();
 
-	std::unique_ptr<u8[]> buf(new u8[buf_len]);
-	std::unique_ptr<u8[]> buf_lower(new u8[buf_len]);
-	std::unique_ptr<u8[]> buf_upper(new u8[buf_len]);
+	std::unique_ptr<char[]> buf(new char[buf_len]);
+	std::unique_ptr<char[]> buf_lower(new char[buf_len]);
+	std::unique_ptr<char[]> buf_upper(new char[buf_len]);
 
 	// Build the title buffer (content_id + file_name).
 	std::memcpy(buf.get(), npd->content_id, 0x30);
@@ -614,9 +613,9 @@ bool validate_npd_hashes(std::string_view file_name, const u8* klicensee, NPD_HE
 	std::memcpy(buf_lower.get(), buf.get(), buf_len);
 	std::memcpy(buf_upper.get(), buf.get(), buf_len);
 
-	for (usz i = std::basic_string_view<u8>(buf.get() + 0x30, file_name.size()).find_last_of('.'); i < buf_len; i++)
+	for (usz i = std::basic_string_view<char>(buf.get() + 0x30, file_name.size()).find_last_of('.'); i < buf_len; i++)
 	{
-		const u8 c = static_cast<u8>(buf[i]);
+		const char c = buf[i];
 		buf_upper[i] = std::toupper(c);
 		buf_lower[i] = std::tolower(c);
 	}
@@ -624,9 +623,9 @@ bool validate_npd_hashes(std::string_view file_name, const u8* klicensee, NPD_HE
 	// Hash with NPDRM_OMAC_KEY_3 and compare with title_hash.
 	// Try to ignore case sensivity with file extension
 	const bool title_hash_result =
-		cmac_hash_compare(const_cast<u8*>(NP_OMAC_KEY_3), 0x10, buf.get(), buf_len, npd->title_hash, 0x10) ||
-		cmac_hash_compare(const_cast<u8*>(NP_OMAC_KEY_3), 0x10, buf_lower.get(), buf_len, npd->title_hash, 0x10) ||
-		cmac_hash_compare(const_cast<u8*>(NP_OMAC_KEY_3), 0x10, buf_upper.get(), buf_len, npd->title_hash, 0x10);
+		cmac_hash_compare(const_cast<u8*>(NP_OMAC_KEY_3), 0x10, reinterpret_cast<u8*>(buf.get()), buf_len, npd->title_hash, 0x10) ||
+		cmac_hash_compare(const_cast<u8*>(NP_OMAC_KEY_3), 0x10, reinterpret_cast<u8*>(buf_lower.get()), buf_len, npd->title_hash, 0x10) ||
+		cmac_hash_compare(const_cast<u8*>(NP_OMAC_KEY_3), 0x10, reinterpret_cast<u8*>(buf_upper.get()), buf_len, npd->title_hash, 0x10);
 
 	if (verbose)
 	{

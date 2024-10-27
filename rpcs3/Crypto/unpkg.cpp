@@ -584,10 +584,10 @@ package_install_result package_reader::check_target_app_version() const
 		return {package_install_result::error_type::other};
 	}
 
-	const auto category       = psf::get_string(m_psf, "CATEGORY", "");
-	const auto title_id       = psf::get_string(m_psf, "TITLE_ID", "");
-	const auto app_ver        = psf::get_string(m_psf, "APP_VER", "");
-	const auto target_app_ver = psf::get_string(m_psf, "TARGET_APP_VER", "");
+	const auto category       = std::string{psf::get_string(m_psf, "CATEGORY", "")};
+	const auto title_id       = std::string{psf::get_string(m_psf, "TITLE_ID", "")};
+	const auto app_ver        = std::string{psf::get_string(m_psf, "APP_VER", "")};
+	const auto target_app_ver = std::string{psf::get_string(m_psf, "TARGET_APP_VER", "")};
 
 	if (category != "GD")
 	{
@@ -613,7 +613,7 @@ package_install_result package_reader::check_target_app_version() const
 		return {package_install_result::error_type::no_error};
 	}
 
-	const std::string sfo_path = rpcs3::utils::get_hdd0_dir() + "game/" + std::string(title_id) + "/PARAM.SFO";
+	const std::string sfo_path = rpcs3::utils::get_hdd0_dir() + "game/" + title_id + "/PARAM.SFO";
 	const fs::file installed_sfo_file(sfo_path);
 	if (!installed_sfo_file)
 	{
@@ -621,7 +621,7 @@ package_install_result package_reader::check_target_app_version() const
 		{
 			// We are unable to compare anything with the target app version
 			pkg_log.error("A target app version is required (%s), but no PARAM.SFO was found for %s. (path='%s', error=%s)", target_app_ver, title_id, sfo_path, fs::g_tls_error);
-			return {package_install_result::error_type::app_version, {std::string(target_app_ver)}};
+			return {package_install_result::error_type::app_version, {target_app_ver}};
 		}
 
 		// There is nothing we need to compare, so we may install the package
@@ -630,8 +630,8 @@ package_install_result package_reader::check_target_app_version() const
 
 	const auto installed_psf = psf::load_object(installed_sfo_file, sfo_path);
 
-	const auto installed_title_id = psf::get_string(installed_psf, "TITLE_ID", "");
-	const auto installed_app_ver  = psf::get_string(installed_psf, "APP_VER", "");
+	const auto installed_title_id = std::string{psf::get_string(installed_psf, "TITLE_ID", "")};
+	const auto installed_app_ver  = std::string{psf::get_string(installed_psf, "APP_VER", "")};
 
 	if (title_id != installed_title_id || installed_app_ver.empty())
 	{
@@ -639,10 +639,10 @@ package_install_result package_reader::check_target_app_version() const
 		return {package_install_result::error_type::no_error};
 	}
 
-	std::add_pointer_t<char> ev0, ev1;
-	const double old_version = std::strtod(installed_app_ver.data(), &ev0);
+	std::size_t ev0, ev1;
+	const double old_version = std::stod(installed_app_ver, &ev0);
 
-	if (installed_app_ver.data() + installed_app_ver.size() != ev0)
+	if (installed_app_ver.size() != ev0)
 	{
 		pkg_log.error("Failed to convert the installed app version to double (%s)", installed_app_ver);
 		return {package_install_result::error_type::other};
@@ -652,9 +652,9 @@ package_install_result package_reader::check_target_app_version() const
 	{
 		// This is most likely the first patch. Let's make sure its version is high enough for the installed game.
 
-		const double new_version = std::strtod(app_ver.data(), &ev1);
+		const double new_version = std::stod(app_ver, &ev1);
 
-		if (app_ver.data() + app_ver.size() != ev1)
+		if (app_ver.size() != ev1)
 		{
 			pkg_log.error("Failed to convert the package's app version to double (%s)", app_ver);
 			return {package_install_result::error_type::other};
@@ -667,14 +667,14 @@ package_install_result package_reader::check_target_app_version() const
 		}
 
 		pkg_log.error("The new app version (%s) is smaller than the installed app version (%s)", app_ver, installed_app_ver);
-		return {package_install_result::error_type::app_version, {std::string(app_ver), std::string(installed_app_ver)}};
+		return {package_install_result::error_type::app_version, {app_ver, installed_app_ver}};
 	}
 
 	// Check if the installed app version matches the target app version
 
-	const double target_version = std::strtod(target_app_ver.data(), &ev1);
+	const double target_version = std::stod(target_app_ver, &ev1);
 
-	if (target_app_ver.data() + target_app_ver.size() != ev1)
+	if (target_app_ver.size() != ev1)
 	{
 		pkg_log.error("Failed to convert the package's target app version to double (%s)", target_app_ver);
 		return {package_install_result::error_type::other};
@@ -687,7 +687,7 @@ package_install_result package_reader::check_target_app_version() const
 	}
 
 	pkg_log.error("The installed app version (%s) does not match the target app version (%s)", installed_app_ver, target_app_ver);
-	return {package_install_result::error_type::app_version, {std::string(target_app_ver), std::string(installed_app_ver)}};
+	return {package_install_result::error_type::app_version, {target_app_ver, installed_app_ver}};
 }
 
 bool package_reader::set_install_path()

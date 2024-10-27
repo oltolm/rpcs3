@@ -180,13 +180,10 @@ bool try_to_float(f64* out, std::string_view value, f64 min, f64 max)
 	}
 
 	// std::from_chars float is yet to be implemented on Xcode it seems
-	// And strtod doesn't support ranged view so we need to ensure it meets a null terminator
-	const std::string str = std::string{value};
+	size_t end_check{};
+	const double result = std::stod(std::string{value}, &end_check);
 
-	char* end_check{};
-	const double result = std::strtod(str.data(), &end_check);
-
-	if (end_check != str.data() + str.size())
+	if (end_check != value.size())
 	{
 		if (out) cfg_log.error("cfg::try_to_float('%s'): invalid float", value);
 		return false;

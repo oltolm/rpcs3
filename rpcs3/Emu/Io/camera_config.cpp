@@ -96,9 +96,9 @@ void cfg_camera::camera_setting::from_string(const std::string& text)
 
 	const auto to_double = [](const std::string& str, double& out) -> bool
 	{
-		char* end{};
-		out = std::strtod(str.c_str(), &end);
-		if (end != str.c_str() + str.size())
+		size_t len{};
+		out = std::stod(str, &len);
+		if (len != str.size())
 		{
 			camera_log.error("String '%s' cannot be interpreted as double.", str);
 			return false;

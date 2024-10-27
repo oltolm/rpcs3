@@ -853,11 +853,11 @@ void game_list_frame::OnRefreshFinished()
 				// The patch is game data and must have the same serial and an app version
 				static constexpr auto version_is_bigger = [](const std::string& v0, const std::string& v1, const std::string& serial, bool is_fw)
 				{
-					std::add_pointer_t<char> ev0, ev1;
-					const double ver0 = std::strtod(v0.c_str(), &ev0);
-					const double ver1 = std::strtod(v1.c_str(), &ev1);
+					std::size_t ev0, ev1;
+					const double ver0 = std::stod(v0, &ev0);
+					const double ver1 = std::stod(v1, &ev1);
 
-					if (v0.c_str() + v0.size() == ev0 && v1.c_str() + v1.size() == ev1)
+					if (v0.size() == ev0 && v1.size() == ev1)
 					{
 						return ver0 > ver1;
 					}

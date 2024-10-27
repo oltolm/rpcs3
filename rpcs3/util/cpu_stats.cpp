@@ -132,10 +132,10 @@ namespace utils
 #if defined(_WIN32) || defined(__linux__)
 		const auto string_to_number = [](const std::string& str) -> std::pair<bool, size_t>
 		{
-			std::add_pointer_t<char> eval;
-			const size_t number = std::strtol(str.c_str(), &eval, 10);
+			std::size_t eval;
+			const size_t number = std::stol(str, &eval, 10);
 
-			if (str.c_str() + str.size() == eval)
+			if (str.size() == eval)
 			{
 				return { true, number };
 			}

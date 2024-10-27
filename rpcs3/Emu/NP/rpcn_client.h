@@ -115,7 +115,7 @@ public:
 		SceNpCommunicationId com_id{};
 		std::memcpy(&com_id.data[0], &vec[i], COMMUNICATION_ID_COMID_COMPONENT_SIZE);
 		const std::string sub_id(reinterpret_cast<const char*>(&vec[i + COMMUNICATION_ID_COMID_COMPONENT_SIZE + 1]), COMMUNICATION_ID_SUBID_COMPONENT_SIZE);
-		const unsigned long result_num = std::strtoul(sub_id.c_str(), nullptr, 10);
+		const unsigned long result_num = std::stoul(sub_id, nullptr, 10);
 
 		if (result_num > 99)
 		{

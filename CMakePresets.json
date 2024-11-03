@@ -50,7 +50,6 @@
         "strategy": "external"
       },
       "cacheVariables": {
-        "CMAKE_CONFIGURATION_TYPES": "Debug;Release",
         "CMAKE_INSTALL_PREFIX": "${sourceDir}/out/install/${presetName}",
         "USE_NATIVE_INSTRUCTIONS": "ON",
         "USE_PRECOMPILED_HEADERS": "ON",

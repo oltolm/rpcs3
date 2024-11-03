@@ -284,8 +284,8 @@ void register_editor_dialog::OnOkay()
 			}
 			else if (reg >= ppu_ff0 && reg <= ppu_ff31)
 			{
-				size_t len{};
-				if (const double reg_value = std::stod(value, &len); len != 0)
+				char* end{};
+				if (const double reg_value = std::strtod(value.c_str(), &end); end != value.c_str())
 				{
 					ppu.fpr[reg_index] = static_cast<f64>(reg_value);
 					return;

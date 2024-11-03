@@ -11,7 +11,6 @@
 #include <QCheckBox>
 
 #include <charconv>
-#include <cstddef>
 #include <unordered_map>
 #include <regex>
 
@@ -147,10 +146,10 @@ u64 memory_viewer_panel::OnSearch(std::string wstr, u32 mode)
 		// Remove trailing 'f' letters
 		wstr = wstr.substr(0, wstr.find_last_not_of("Ff") + 1);
 
-		size_t len{};
-		be_t<f64> value = std::stod(wstr, &len);
+		char* end{};
+		be_t<f64> value = std::strtod(wstr.data(), &end);
 
-		if (wstr.empty() || len != wstr.size())
+		if (wstr.empty() || end != wstr.data() + wstr.size())
 		{
 			gui_log.error("String '%s' cannot be interpreted as double.", wstr);
 			return 0;
@@ -164,10 +163,10 @@ u64 memory_viewer_panel::OnSearch(std::string wstr, u32 mode)
 	{
 		wstr = wstr.substr(0, wstr.find_last_not_of("Ff") + 1);
 
-		size_t len{};
-		be_t<f32> value = std::stof(wstr, &len);
+		char* end{};
+		be_t<f32> value = std::strtof(wstr.data(), &end);
 
-		if (wstr.empty() || len != wstr.size())
+		if (wstr.empty() || end != wstr.data() + wstr.size())
 		{
 			gui_log.error("String '%s' cannot be interpreted as float.", wstr);
 			return 0;

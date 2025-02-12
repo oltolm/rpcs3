@@ -91,6 +91,10 @@ void fmt_class_string<rpcn::ErrorType>::format(std::string& out, u64 arg)
 		});
 }
 
+#ifdef _WIN32
+#pragma push_macro("SendMessage")
+#undef SendMessage
+#endif
 template <>
 void fmt_class_string<rpcn::CommandType>::format(std::string& out, u64 arg)
 {
@@ -3346,3 +3350,6 @@ namespace rpcn
 	}
 
 } // namespace rpcn
+#ifdef _WIN32
+#pragma pop_macro("SendMessage")
+#endif

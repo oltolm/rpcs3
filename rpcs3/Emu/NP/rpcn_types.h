@@ -2,6 +2,10 @@
 
 #include "util/types.hpp"
 
+#ifdef _WIN32
+#pragma push_macro("SendMessage")
+#undef SendMessage
+#endif
 namespace rpcn
 {
 	enum class CommandType : u16
@@ -154,3 +158,6 @@ namespace rpcn
 		Unsupported,
 	};
 } // namespace rpcn
+#ifdef _WIN32
+#pragma pop_macro("SendMessage")
+#endif

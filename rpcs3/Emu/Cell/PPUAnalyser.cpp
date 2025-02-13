@@ -619,7 +619,7 @@ struct reg_state_t
 	}
 
 	// Clear bits using mask
-	// May fail if ge_than(+)value_range is modified by the operation 
+	// May fail if ge_than(+)value_range is modified by the operation
 	bool clear_mask(u64 bit_mask, u32& reg_tag_allocator)
 	{
 		if (bit_mask == umax)
@@ -1805,7 +1805,7 @@ bool ppu_module<lv2_obj>::analyse(u32 lib_toc, u32 entry, const u32 sec_end, con
 			{
 				auto& block = block_queue.emplace_back(block_local_info_t{addr});
 				block.parent_block_idx = parent_block;
-	
+
 				if (parent_block != umax)
 				{
 					// Inherit loaded registers mask (lazily)
@@ -3244,10 +3244,8 @@ bool ppu_module<lv2_obj>::analyse(u32 lib_toc, u32 entry, const u32 sec_end, con
 	}
 
 	// Convert map to vector (destructive)
-	for (auto it = fmap.begin(); it != fmap.end(); it = fmap.begin())
+	for (auto&& [_, block] : as_rvalue(std::move(fmap)))
 	{
-		ppu_function_ext block = std::move(fmap.extract(it).mapped());
-
 		if (block.attr & ppu_attr::no_size && block.size > 4 && !used_fallback)
 		{
 			ppu_log.warning("Block 0x%x will be compiled on per-instruction basis (size=0x%x)", block.addr, block.size);

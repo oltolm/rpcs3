@@ -38,26 +38,9 @@ constexpr u32 s_reg_max = spu_recompiler_base::s_reg_max;
 template<typename T>
 struct span_less
 {
-	static int compare(const std::span<T>& lhs, const std::span<T>& rhs) noexcept
+	static auto compare(const std::span<T>& lhs, const std::span<T>& rhs) noexcept
 	{
-		// TODO: Replace with std::lexicographical_compare_three_way when it becomes available to all compilers
-		for (usz i = 0, last = std::min(lhs.size(), rhs.size()); i != last; i++)
-		{
-			const T vl = lhs[i];
-			const T vr = rhs[i];
-
-			if (vl != vr)
-			{
-				return vl < vr ? -1 : 1;
-			}
-		}
-
-		if (lhs.size() != rhs.size())
-		{
-			return lhs.size() < rhs.size() ? -1 : 1;
-		}
-
-		return 0;
+		return std::lexicographical_compare_three_way(lhs.begin(), lhs.end(), rhs.begin(), rhs.end());
 	}
 
 	bool operator()(const std::span<T>& lhs, const std::span<T>& rhs) const noexcept
@@ -569,7 +552,7 @@ extern void utilize_spu_data_segment(u32 vaddr, const void* ls_data_vaddr, u32 s
 		return;
 	}
 
-	std::vector<u32> data(size / 4);
+	std::vector<u32> data(size / 4, 0);
 	std::memcpy(data.data(), ls_data_vaddr, size);
 
 	spu_cache::precompile_data_t obj{vaddr, std::move(data)};
@@ -1292,7 +1275,7 @@ bool spu_program::operator<(const spu_program& rhs) const noexcept
 	std::span<const u32> lhs_data(data.data() + lhs_offs, data.size() - lhs_offs);
 	std::span<const u32> rhs_data(rhs.data.data() + rhs_offs, rhs.data.size() - rhs_offs);
 
-	const int cmp0 = span_less<const u32>::compare(lhs_data, rhs_data);
+	const auto cmp0 = span_less<const u32>::compare(lhs_data, rhs_data);
 
 	if (cmp0 < 0)
 		return true;
@@ -1303,7 +1286,7 @@ bool spu_program::operator<(const spu_program& rhs) const noexcept
 	lhs_data = {data.data(), lhs_offs};
 	rhs_data = {rhs.data.data(), rhs_offs};
 
-	const int cmp1 = span_less<const u32>::compare(lhs_data, rhs_data);
+	const auto cmp1 = span_less<const u32>::compare(lhs_data, rhs_data);
 
 	if (cmp1 < 0)
 		return true;
@@ -2545,7 +2528,7 @@ bool reg_state_t::is_const() const
 
 bool reg_state_t::compare_tags(const reg_state_t& rhs) const
 {
-	// Compare by tag, address of instruction origin 
+	// Compare by tag, address of instruction origin
 	return tag == rhs.tag && origin == rhs.origin && is_instruction == rhs.is_instruction;
 }
 
@@ -6066,7 +6049,7 @@ spu_program spu_recompiler_base::analyse(const be_t<u32>* ls, u32 entry_point, s
 									else if (atomic16->ls_offs.compare_with_mask_indifference(atomic16->lsa, SPU_LS_MASK_128) && atomic16->ls.is_less_than(128 - (atomic16->ls_offs.value & 127)))
 									{
 										// Relative memory access with offset less than 128 bytes
-										// Common around SPU utilities which have less strict restrictions about memory alignment 
+										// Common around SPU utilities which have less strict restrictions about memory alignment
 										ok = true;
 									}
 								}
@@ -6340,7 +6323,7 @@ spu_program spu_recompiler_base::analyse(const be_t<u32>* ls, u32 entry_point, s
 			{
 				atomic16->mem_count++;
 
-				// Do not clear lower 16 bytes addressing because the program can move on 4-byte basis 
+				// Do not clear lower 16 bytes addressing because the program can move on 4-byte basis
 				const u32 offs = spu_branch_target(pos - result.lower_bound, op.si16);
 
 				if (atomic16->lsa.is_const() && [&]()
@@ -8142,7 +8125,7 @@ std::array<reg_state_t, s_reg_max>& block_reg_info::evaluate_start_state(const s
 					// Check if the node is resolved
 					if (!node->has_true_state)
 					{
-						// Assume this block cannot be resolved at the moment 
+						// Assume this block cannot be resolved at the moment
 						is_all_resolved = false;
 						break;
 					}

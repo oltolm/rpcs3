@@ -51,27 +51,31 @@ bool qt_camera_video_sink::present(const QVideoFrame& frame)
 
 		// Determine image flip
 		const camera_flip flip_setting = g_cfg.io.camera_flip_option;
-
-		bool flip_horizontally = m_front_facing; // Front facing cameras are flipped already
-		if (flip_setting == camera_flip::horizontal || flip_setting == camera_flip::both)
+		Qt::Orientations orient = [flip_setting]() -> Qt::Orientations
 		{
-			flip_horizontally = !flip_horizontally;
+			switch (flip_setting)
+			{
+			case camera_flip::both: return Qt::Horizontal | Qt::Vertical;
+			case camera_flip::horizontal: return Qt::Horizontal;
+			case camera_flip::vertical: return Qt::Vertical;
+			case camera_flip::none: return Qt::Orientation(0);
+			}
+			return Qt::Orientation(0);
+		}();
+
+		if (m_front_facing) // Front facing cameras are flipped already
+		{
+			orient ^= Qt::Horizontal;
 		}
 		if (m_mirrored) // Set by the game
 		{
-			flip_horizontally = !flip_horizontally;
-		}
-
-		bool flip_vertically = false;
-		if (flip_setting == camera_flip::vertical || flip_setting == camera_flip::both)
-		{
-			flip_vertically = !flip_vertically;
+			orient ^= Qt::Horizontal;
 		}
 
 		// Flip image if necessary
-		if (flip_horizontally || flip_vertically)
+		if (orient)
 		{
-			image.mirror(flip_horizontally, flip_vertically);
+			image.flip(orient);
 		}
 
 		if (image.format() != QImage::Format_RGBA8888)

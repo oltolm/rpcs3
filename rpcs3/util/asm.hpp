@@ -8,31 +8,11 @@
 extern bool g_use_rtm;
 extern u64 g_rtm_tx_limit1;
 
-#ifdef _M_X64
 #ifdef _MSC_VER
-extern "C"
-{
-	u32 _xbegin();
-	void _xend();
-	void _mm_pause();
-	void _mm_prefetch(const char*, int);
-	void _m_prefetchw(const volatile void*);
-
-	uchar _rotl8(uchar, uchar);
-	ushort _rotl16(ushort, uchar);
-	u64 __popcnt64(u64);
-
-	s64 __mulh(s64, s64);
-	u64 __umulh(u64, u64);
-
-	s64 _div128(s64, s64, s64, s64*);
-	u64 _udiv128(u64, u64, u64, u64*);
-	void __debugbreak();
-}
 #include <intrin.h>
 #else
 #include <immintrin.h>
-#endif
+#include <x86intrin.h>
 #endif
 
 namespace utils
@@ -113,7 +93,7 @@ namespace utils
 		const u64 value = reinterpret_cast<u64>(func);
 		const void* ptr = reinterpret_cast<const void*>(value);
 
-#ifdef _M_X64
+#ifdef ARCH_X64
 		return _mm_prefetch(static_cast<const char*>(ptr), _MM_HINT_T1);
 #else
 		return __builtin_prefetch(ptr, 0, 2);
@@ -128,7 +108,7 @@ namespace utils
 			return;
 		}
 
-#ifdef _M_X64
+#ifdef ARCH_X64
 		return _mm_prefetch(static_cast<const char*>(ptr), _MM_HINT_T0);
 #else
 		return __builtin_prefetch(ptr, 0, 3);
@@ -142,10 +122,10 @@ namespace utils
 			return;
 		}
 
-#if defined(_M_X64) && !defined(__clang__)
-		return _m_prefetchw(ptr);
+#if defined(ARCH_X64)
+		return _m_prefetchw(const_cast<void*>(ptr));
 #else
-		return __builtin_prefetch(ptr, 1, 0);
+		return __builtin_prefetch(ptr, 1, 3);
 #endif
 	}
 
@@ -158,10 +138,8 @@ namespace utils
 
 #ifdef _MSC_VER
 		return _rotl8(x, n);
-#elif defined(__clang__)
-		return __builtin_rotateleft8(x, n);
 #elif defined(ARCH_X64)
-		return __builtin_ia32_rolqi(x, n);
+		return __rolb(x, n);
 #else
 		return (x << (n & 7)) | (x >> ((-n & 7)));
 #endif
@@ -176,10 +154,8 @@ namespace utils
 
 #ifdef _MSC_VER
 		return _rotl16(x, static_cast<uchar>(n));
-#elif defined(__clang__)
-		return __builtin_rotateleft16(x, n);
 #elif defined(ARCH_X64)
-		return __builtin_ia32_rolhi(x, n);
+		return __rolw(x, n);
 #else
 		return (x << (n & 15)) | (x >> ((-n & 15)));
 #endif
@@ -194,8 +170,8 @@ namespace utils
 
 #ifdef _MSC_VER
 		return _rotl(x, n);
-#elif defined(__clang__)
-		return __builtin_rotateleft32(x, n);
+#elif defined(ARCH_X64)
+		return __rold(x, n);
 #else
 		return (x << (n & 31)) | (x >> (((0 - n) & 31)));
 #endif
@@ -210,8 +186,8 @@ namespace utils
 
 #ifdef _MSC_VER
 		return _rotl64(x, static_cast<int>(n));
-#elif defined(__clang__)
-		return __builtin_rotateleft64(x, n);
+#elif defined(ARCH_X64)
+		return __rolq(x, n);
 #else
 		return (x << (n & 63)) | (x >> (((0 - n) & 63)));
 #endif
@@ -358,10 +334,8 @@ namespace utils
 	{
 #if defined(ARCH_ARM64)
 		__asm__ volatile("yield");
-#elif defined(_M_X64)
-		_mm_pause();
 #elif defined(ARCH_X64)
-		__builtin_ia32_pause();
+		_mm_pause();
 #else
 #error "Missing utils::pause() implementation"
 #endif

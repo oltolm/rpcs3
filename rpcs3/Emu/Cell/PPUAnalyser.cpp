@@ -2174,7 +2174,7 @@ bool ppu_module<lv2_obj>::analyse(u32 lib_toc, u32 entry, const u32 sec_end, con
 									return;
 								}
 
-								if (addr % 4 || addr < func.addr || addr >= func_end || !is_valid_code({ get_ptr<u32>(addr), code_end }, !is_relocatable, addr))
+								if (addr % 4 || addr < func.addr || addr >= func_end || (get_ptr<u32>(addr) < code_end && !is_valid_code({ get_ptr<u32>(addr), code_end }, !is_relocatable, addr)))
 								{
 									return;
 								}

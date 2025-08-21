@@ -2397,12 +2397,12 @@ public:
 								if (!worked_on[p])
 								{
 									worked_on[p] = true;
-									work2_list.push_back(std::make_pair(p, found_user));
+									work2_list.emplace_back(p, found_user);
 								}
 								// Enqueue a second iteration for found_user=true if only found with found_user=false
 								else if (found_user && !std::find_if(work2_list.rbegin(), work2_list.rend(), [&](auto& it){ return it.first == p; })->second)
 								{
-									work2_list.push_back(std::make_pair(p, true));
+									work2_list.emplace_back(p, true);
 								}
 							}
 

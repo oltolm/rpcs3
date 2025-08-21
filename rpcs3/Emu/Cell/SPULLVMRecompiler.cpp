@@ -631,38 +631,38 @@ class spu_llvm_recompiler : public spu_recompiler_base, public cpu_translator
 		return _ptr(m_interp_regs, m_ir->CreateZExt(idx, get_type<u64>()));
 	}
 
-	llvm::Value* double_as_uint64(llvm::Value* val)
+	value_t<u64[4]> double_as_uint64(value_t<f64[4]> val)
 	{
-		return bitcast<u64[4]>(val);
+		return eval(bitcast<u64[4]>(val));
 	}
 
-	llvm::Value* uint64_as_double(llvm::Value* val)
+	value_t<f64[4]> uint64_as_double(value_t<u64[4]> val)
 	{
-		return bitcast<f64[4]>(val);
+		return eval(bitcast<f64[4]>(val));
 	}
 
 	llvm::Value* double_to_xfloat(llvm::Value* val)
 	{
 		ensure(val && val->getType() == get_type<f64[4]>());
 
-		const auto d = double_as_uint64(val);
-		const auto s = m_ir->CreateAnd(m_ir->CreateLShr(d, 32), 0x80000000);
-		const auto m = m_ir->CreateXor(m_ir->CreateLShr(d, 29), 0x40000000);
-		const auto r = m_ir->CreateOr(m_ir->CreateAnd(m, 0x7fffffff), s);
-		return m_ir->CreateTrunc(m_ir->CreateSelect(m_ir->CreateIsNotNull(d), r, splat<u64[4]>(0).eval(m_ir)), get_type<u32[4]>());
+		const auto d = double_as_uint64(value<f64[4]>(val));
+		const auto s = (d >> 32) & 0x80000000;
+		const auto m = (d >> 29) ^ 0x40000000;
+		const auto r = (m & 0x7fffffff) | s;
+		return trunc<u32[4]>(select(d != 0, r, splat<u64[4]>(0))).eval(m_ir);
 	}
 
 	llvm::Value* xfloat_to_double(llvm::Value* val)
 	{
 		ensure(val && val->getType() == get_type<u32[4]>());
 
-		const auto x = m_ir->CreateZExt(val, get_type<u64[4]>());
-		const auto s = m_ir->CreateShl(m_ir->CreateAnd(x, 0x80000000), 32);
-		const auto a = m_ir->CreateAnd(x, 0x7fffffff);
-		const auto m = m_ir->CreateShl(m_ir->CreateAdd(a, splat<u64[4]>(0x1c0000000).eval(m_ir)), 29);
-		const auto r = m_ir->CreateSelect(m_ir->CreateICmpSGT(a, splat<u64[4]>(0x7fffff).eval(m_ir)), m, splat<u64[4]>(0).eval(m_ir));
-		const auto f = m_ir->CreateOr(s, r);
-		return uint64_as_double(f);
+		const auto x = zext<u64[4]>(value<u32[4]>(val));
+		const auto s = (x & 0x80000000) << 32;
+		const auto a = x & 0x7fffffff;
+		const auto m = (a + splat<u64[4]>(0x1c0000000)) << 29;
+		const auto r = select(noncast<s64[4]>(a) > noncast<s64[4]>(splat<u64[4]>(0x7fffff)), m, splat<u64[4]>(0));
+		const auto f = eval(s | r);
+		return uint64_as_double(f).eval(m_ir);
 	}
 
 	// Clamp double values to ±Smax, flush values smaller than ±Smin to positive zero
@@ -670,25 +670,25 @@ class spu_llvm_recompiler : public spu_recompiler_base, public cpu_translator
 	{
 		ensure(val && val->getType() == get_type<f64[4]>());
 
-		const auto smax = uint64_as_double(splat<u64[4]>(0x47ffffffe0000000).eval(m_ir));
-		const auto smin = uint64_as_double(splat<u64[4]>(0x3810000000000000).eval(m_ir));
+		const auto smax = uint64_as_double(eval(splat<u64[4]>(0x47ffffffe0000000)));
+		const auto smin = uint64_as_double(eval(splat<u64[4]>(0x3810000000000000)));
 
-		const auto d = double_as_uint64(val);
-		const auto s = m_ir->CreateAnd(d, 0x8000000000000000);
-		const auto a = uint64_as_double(m_ir->CreateAnd(d, 0x7fffffffe0000000));
-		const auto n = m_ir->CreateFCmpOLT(a, smax);
-		const auto z = m_ir->CreateFCmpOLT(a, smin);
-		const auto c = double_as_uint64(m_ir->CreateSelect(n, a, smax));
-		return m_ir->CreateSelect(z, fsplat<f64[4]>(0.).eval(m_ir), uint64_as_double(m_ir->CreateOr(c, s)));
+		const auto d = double_as_uint64(value<f64[4]>(val));
+		const auto s = d & 0x8000000000000000;
+		const auto a = uint64_as_double(eval(d & 0x7fffffffe0000000));
+		const auto n = fcmp_ord(a < smax);
+		const auto z = fcmp_ord(a < smin);
+		const auto c = double_as_uint64(eval(select(n, a, smax)));
+		return select(z, fsplat<f64[4]>(0.), uint64_as_double(eval(c | s))).eval(m_ir);
 	}
 
 	// Expand 32-bit mask for xfloat values to 64-bit, 29 least significant bits are always zero
-	llvm::Value* conv_xfloat_mask(llvm::Value* val)
+	value_t<u64[4]> conv_xfloat_mask(value_t<u32[4]> val)
 	{
-		const auto d = m_ir->CreateZExt(val, get_type<u64[4]>());
-		const auto s = m_ir->CreateShl(m_ir->CreateAnd(d, 0x80000000), 32);
-		const auto e = m_ir->CreateLShr(m_ir->CreateAShr(m_ir->CreateShl(d, 33), 4), 1);
-		return m_ir->CreateOr(s, e);
+		const auto d = zext<u64[4]>(val);
+		const auto s = (d & 0x80000000) << 32;
+		const auto e = noncast<u64[4]>(noncast<s64[4]>(d << 33) >> 4) >> 1;
+		return eval(s | e);
 	}
 
 	llvm::Value* get_reg_raw(u32 index)
@@ -5726,10 +5726,10 @@ public:
 			const auto c = get_vr<u32[4]>(op.rc);
 			const auto b = get_vr<f64[4]>(op.rb);
 			const auto a = get_vr<f64[4]>(op.ra);
-			const auto m = conv_xfloat_mask(c.value);
-			const auto x = m_ir->CreateAnd(double_as_uint64(b.value), m);
-			const auto y = m_ir->CreateAnd(double_as_uint64(a.value), m_ir->CreateNot(m));
-			set_reg_fixed(op.rt4, uint64_as_double(m_ir->CreateOr(x, y)));
+			const auto m = conv_xfloat_mask(c);
+			const auto x = double_as_uint64(b) & m;
+			const auto y = double_as_uint64(a) & ~m;
+			set_reg_fixed(op.rt4, uint64_as_double(eval(x | y)).eval(m_ir));
 			return;
 		}
 

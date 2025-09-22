@@ -74,6 +74,7 @@ namespace Darwin_ProcessInfo
 namespace utils
 {
 #ifdef _WIN32
+#if !defined(ARCH_X64)
 	// Some helpers for sanity
 	const auto read_reg_dword = [](HKEY hKey, std::string_view value_name) -> std::pair<bool, DWORD>
 	{
@@ -110,7 +111,6 @@ namespace utils
 		return { true, sz };
 	};
 
-#if !defined(ARCH_X64)
 	// Alternative way to read OS version using the registry.
 	static std::string get_fallback_windows_version()
 	{

@@ -4,6 +4,8 @@
 #include "util/to_endian.hpp"
 #include "Utilities/StrFmt.h"
 #include "vm.h"
+#include <string_view>
+#include <type_traits>
 
 class ppu_thread;
 struct ppu_func_opd_t;
@@ -110,6 +112,11 @@ namespace vm
 			}
 
 			return static_cast<T*>(vm::base(vm::cast(m_addr)));
+		}
+
+		std::string_view get_sv() const requires(std::is_same_v<std::remove_const_t<T>, char>)
+		{
+			return std::string_view(get_ptr());
 		}
 
 		T* operator ->() const requires (!std::is_void_v<T>)

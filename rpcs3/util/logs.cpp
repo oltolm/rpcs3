@@ -3,7 +3,6 @@
 #include "Utilities/mutex.h"
 #include "Utilities/Thread.h"
 #include "Utilities/StrFmt.h"
-#include <cstring>
 #include <cstdarg>
 #include <string>
 #include <unordered_map>

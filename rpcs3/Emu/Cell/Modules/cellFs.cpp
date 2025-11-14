@@ -8,6 +8,7 @@
 #include "cellFs.h"
 
 #include <mutex>
+#include <string_view>
 
 LOG_CHANNEL(cellFs);
 
@@ -354,7 +355,7 @@ error_code cellFsGetFreeSize(ppu_thread& ppu, vm::cptr<char> path, vm::ptr<u32> 
 	op->out_code = 0x80010003;
 	op->path = path;
 
-	if (!std::strncmp(path.get_ptr(), "/dev_hdd0", 9))
+	if (path.get_sv().starts_with("/dev_hdd0"))
 	{
 		sys_fs_fcntl(ppu, -1, 0xC0000002, op, sizeof(*op));
 		*block_count = op->out_block_count;
